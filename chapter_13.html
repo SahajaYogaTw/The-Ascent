@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>第十三章　頂輪（Sahasrara Chakra）</title>
+<style>
+  :root{
+    --gold:#b8975f;
+    --soft:#f7f4ee;
+    --card:#fffdf9;
+    --muted:#9c9484;
+    --ink:#4a4238;
+    --scale:1;
+  }
+
+  :root.dark{
+    --gold:#d9c690;
+    --soft:#1b1613;
+    --card:#241d19;
+    --muted:#8a7d72;
+    --ink:#f1ece4;
+  }
+
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+
+  html,body{
+    margin:0;
+    padding:0;
+    height:100%;
+    background:var(--soft);
+    font-family:"Noto Serif TC","PMingLiU","Songti TC",serif;
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+    overflow:hidden;
+    transition:background 200ms ease, color 200ms ease;
+  }
+
+  .app{
+    position:relative;
+    height:100vh;
+    max-width:640px;
+    margin:0 auto;
+    display:flex;
+    flex-direction:column;
+  }
+
+  .globalbar{
+    flex:0 0 auto;
+    height:2px;
+    background:rgba(0,0,0,0.06);
+  }
+  .globalbar-fill{
+    height:100%;
+    background:var(--gold);
+    width:0%;
+    transition:width 300ms ease;
+  }
+
+  .topbar{
+    flex:0 0 auto;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:6px;
+    padding:14px 14px 8px;
+    z-index:20;
+  }
+
+  .iconbtn{
+    background:none;
+    border:none;
+    color:var(--muted);
+    font-size:17px;
+    line-height:1;
+    padding:6px 8px;
+    cursor:pointer;
+    flex:0 0 auto;
+  }
+
+  .topbar .title{
+    flex:1 1 auto;
+    text-align:center;
+    font-size:12px;
+    letter-spacing:0.2em;
+    color:var(--gold);
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+
+  .topbar .counter{
+    flex:0 0 auto;
+    font-size:11px;
+    letter-spacing:0.05em;
+    color:var(--muted);
+    padding:0 2px;
+  }
+
+  .book{
+    position:relative;
+    flex:1 1 auto;
+    overflow:hidden;
+  }
+
+  .track{
+    position:absolute;
+    top:0; left:0;
+    height:100%;
+    display:flex;
+    transition:transform 380ms cubic-bezier(.22,.61,.36,1);
+    will-change:transform;
+  }
+  .track.no-anim{ transition:none; }
+
+  .leaf{
+    flex:0 0 100vw;
+    max-width:640px;
+    height:100%;
+    padding:8px 26px 20px;
+    overflow:hidden;
+  }
+
+  .leaf-inner{ display:block; }
+
+  .chapter-head{ text-align:center; margin-bottom:30px; }
+  .chapter-head .eyebrow{ font-size:11px; letter-spacing:0.32em; color:var(--gold); margin-bottom:8px; }
+  .chapter-head h1{ font-size:24px; font-weight:600; letter-spacing:0.14em; margin:0 0 8px; }
+  .chapter-head .divider{ color:var(--gold); font-size:14px; letter-spacing:0.4em; margin-top:14px; }
+
+  .leaf-inner p{
+    font-size:calc(16.5px * var(--scale));
+    line-height:1.98;
+    letter-spacing:0.02em;
+    margin:0 0 22px;
+    text-indent:2em;
+  }
+  .leaf-inner p:last-child{ margin-bottom:0; }
+  .leaf-inner p.continued{ text-indent:0; }
+
+  .leaf-foot{ text-align:center; margin-top:10px; font-size:13px; color:var(--gold); letter-spacing:0.15em; }
+
+  .dots{
+    flex:0 0 auto;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    gap:9px;
+    padding:12px 0 14px;
+    z-index:20;
+    flex-wrap:wrap;
+  }
+
+  .dot{ width:6px; height:6px; border-radius:50%; background:var(--muted); opacity:0.35; transition:all 260ms ease; }
+  .dot.active{ opacity:1; background:var(--gold); width:16px; border-radius:3px; }
+
+  .edge{
+    position:absolute; top:0; height:100%; width:34px; z-index:15;
+    display:flex; align-items:center; justify-content:center;
+    color:var(--muted); font-size:15px; opacity:0;
+    transition:opacity 200ms ease; pointer-events:none;
+  }
+  .edge.show{ opacity:0.5; }
+  .edge.left{ left:0; }
+  .edge.right{ right:0; }
+
+  .loading{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    color:var(--muted); font-size:13px; letter-spacing:0.2em;
+  }
+
+  .booknav{
+    flex:0 0 auto;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    padding:10px 20px 16px;
+    border-top:1px solid rgba(0,0,0,0.06);
+    z-index:20;
+  }
+  .booknav a, .booknav span{ font-size:12px; letter-spacing:0.08em; color:var(--muted); text-decoration:none; padding:6px 4px; }
+  .booknav a{ color:var(--ink); }
+  .booknav .home{ color:var(--gold); letter-spacing:0.2em; }
+  .booknav .disabled{ color:var(--muted); opacity:0.4; pointer-events:none; }
+
+  .overlay{
+    position:fixed; inset:0; z-index:100;
+    background:rgba(0,0,0,0.45);
+    display:none;
+    align-items:flex-end;
+  }
+  .overlay.show{ display:flex; }
+
+  .sheet{
+    background:var(--card);
+    width:100%;
+    max-width:640px;
+    margin:0 auto;
+    max-height:78vh;
+    border-radius:20px 20px 0 0;
+    padding:18px 0 max(18px, env(safe-area-inset-bottom));
+    display:flex;
+    flex-direction:column;
+  }
+
+  .sheet-head{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:0 20px 14px;
+    font-size:12px; letter-spacing:0.2em; color:var(--gold);
+  }
+  .sheet-head button{
+    background:none; border:none; color:var(--muted); font-size:18px; padding:4px 8px; cursor:pointer;
+  }
+
+  .sheet-list{ overflow-y:auto; padding:0 8px; }
+  .sheet-item{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:13px 12px;
+    text-decoration:none;
+    color:var(--ink);
+    border-bottom:1px solid rgba(0,0,0,0.06);
+    font-size:14.5px;
+  }
+  .sheet-item.current{ color:var(--gold); }
+  .sheet-item:last-child{ border-bottom:none; }
+  .sheet-item .n{ color:var(--gold); font-size:11px; width:28px; flex:0 0 auto; }
+  .sheet-item .t{ flex:1 1 auto; padding:0 6px; }
+
+  .settings-body{ padding:6px 20px 10px; }
+  .setting-row{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 0;
+    border-bottom:1px solid rgba(0,0,0,0.06);
+  }
+  .setting-row:last-child{ border-bottom:none; }
+  .setting-label{ font-size:13px; color:var(--muted); letter-spacing:0.08em; }
+  .setting-controls{ display:flex; align-items:center; gap:10px; }
+  .pillbtn{
+    background:none;
+    border:1px solid var(--muted);
+    color:var(--ink);
+    width:32px; height:32px;
+    border-radius:50%;
+    font-size:14px;
+    cursor:pointer;
+  }
+  .theme-toggle{
+    display:flex; border:1px solid var(--muted); border-radius:16px; overflow:hidden;
+  }
+  .theme-toggle button{
+    background:none; border:none; color:var(--muted); font-size:14px; padding:6px 14px; cursor:pointer;
+  }
+  .theme-toggle button.active{ background:var(--gold); color:var(--card); }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <div class="globalbar"><div class="globalbar-fill" id="globalFill"></div></div>
+
+  <div class="topbar">
+    <button class="iconbtn" id="menuBtn" aria-label="目錄">☰</button>
+    <span class="title">第十三章　頂輪（Sahasrara Chakra）</span>
+    <span class="counter"><span id="curPage">1</span>/<span id="totalPage">…</span></span>
+    <button class="iconbtn" id="settingsBtn" aria-label="設定">⚙</button>
+  </div>
+
+  <div class="book" id="book">
+    <div class="edge left" id="edgeLeft">‹</div>
+    <div class="edge right" id="edgeRight">›</div>
+    <div class="loading" id="loading">排版中 ◇</div>
+    <div class="track no-anim" id="track"></div>
+  </div>
+
+  <div class="dots" id="dots"></div>
+
+  <div class="booknav">
+    <a href="chapter_12.html">‹ 上一頁</a>
+    <a class="home" href="index.html">回首頁</a>
+    <a href="chapter_14.html">下一頁 ›</a>
+  </div>
+
+</div>
+
+<div class="overlay" id="tocOverlay">
+  <div class="sheet">
+    <div class="sheet-head">
+      <span>目　錄</span>
+      <button id="tocClose">✕</button>
+    </div>
+    <div class="sheet-list" id="tocList"></div>
+  </div>
+</div>
+
+<div class="overlay" id="settingsOverlay">
+  <div class="sheet">
+    <div class="sheet-head">
+      <span>設　定</span>
+      <button id="settingsClose">✕</button>
+    </div>
+    <div class="settings-body">
+      <div class="setting-row">
+        <span class="setting-label">字級</span>
+        <div class="setting-controls">
+          <button class="pillbtn" id="fontMinus">A-</button>
+          <button class="pillbtn" id="fontPlus">A+</button>
+        </div>
+      </div>
+      <div class="setting-row">
+        <span class="setting-label">模式</span>
+        <div class="theme-toggle">
+          <button id="themeLight">☼ 日</button>
+          <button id="themeDark">☾ 夜</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="measure" class="leaf" style="position:fixed; top:0; left:-9999px; visibility:hidden; height:auto; overflow:visible;">
+  <div class="leaf-inner" id="measureInner"></div>
+</div>
+
+<script>
+(function(){
+
+  var CHAPTER_FILE = "chapter_13.html";
+  var BASE_OFFSET = 31328;
+  var TOTAL_CHARS = 41770;
+  var PREV_FILE = "chapter_12.html";
+  var NEXT_FILE = "chapter_14.html";
+  var CHAPTER_LIST = [{"num": "01", "title": "求道者", "file": "chapter_1.html"}, {"num": "02", "title": "靈量（Kundalini）", "file": "chapter_2.html"}, {"num": "03", "title": "陰脈、陽脈和中脈", "file": "chapter_3.html"}, {"num": "04", "title": "人體小宇宙", "file": "chapter_4.html"}, {"num": "05", "title": "根輪（Mooladhara Chakra）", "file": "chapter_5.html"}, {"num": "06", "title": "腹輪（Swadisthan Chakra）", "file": "chapter_6.html"}, {"num": "07", "title": "臍輪（Nabhi Chakra）", "file": "chapter_7.html"}, {"num": "08", "title": "集體意識", "file": "chapter_8.html"}, {"num": "09", "title": "十大宗師", "file": "chapter_9.html"}, {"num": "10", "title": "心輪（Heart Chakra）", "file": "chapter_10.html"}, {"num": "11", "title": "喉輪（Visshudhi Chakra）", "file": "chapter_11.html"}, {"num": "12", "title": "額輪（Agnya Chakra）", "file": "chapter_12.html"}, {"num": "13", "title": "頂輪（Sahasrara Chakra）", "file": "chapter_13.html"}, {"num": "14", "title": "神聖的生命能量", "file": "chapter_14.html"}, {"num": "15", "title": "靜坐冥想", "file": "chapter_15.html"}, {"num": "16", "title": "萬物之母", "file": "chapter_16.html"}, {"num": "17", "title": "後記", "file": "chapter_17.html"}];
+
+  var HEADER_HTML =
+    '<div class="chapter-head">'+
+      '<div class="eyebrow">SAHASRARA CHAKRA</div>'+
+      '<h1>第十三章　頂輪（Sahasrara Chakra）</h1>'+
+      '<div class="divider">❖</div>'+
+    '</div>';
+
+  var PARAGRAPHS = ["當靈量穿過所有能量中心，便昇上第七個能量中心，打開第五次元的世界。靈量啓發了智慧，使人經驗到真我。真我的每一行為都是屬靈和神聖的，因為真我由靈體所生。這時，我們超越了精神和理性，成為靈體，而不是自我的工具。", "在這種狀態下，意識經驗到自身。集體無意識並不是說沒有意識，而是更敏銳的意識層次，是一般世俗的意識不能達到的。當靈量打開第七中心時，我們便可以在中樞神經系統經驗到集體無意識。這不是個假設，而是活生生的事實。你可以感到靈量在頭頂上昇，熱力和內在的緊張都得以清除，並且感到一股涼風從頭頂昇起。", "這時，你便進入了和諧的狀態，感到平安、寧靜和喜樂。這是個自然而然的過程。如果你試圖分析它、投射它、便會有別的反應。例如情緒化的人會越加情緒化，進入潛意識，而理智強的人會經驗到思維的投射。這是個生命的過程，就像種子發芽便會成長。英國詩人布來克（William Blake）這樣寫道：「且看花兒發出芬香，誰可解釋：為何小小的花兒有如此甜蜜的香氣？不要去想它，永恆便會擴大。」", "人們唯一要做的事情是把種子放在母親大地上。同樣地，一個得到自覺的人能把你的靈量昇起，連接上生命的根源。當靈量昇起後，便把走向過去或將來的注意力奪回來，固定在現在這一刻。靈量不斷按自己的意識工作，她是靈體的純潔欲望。因此身體如果有甚麼障礙，她都會清除它們。靈量就像生命的河流，經常沖刷那些障礙，最後一沖而出，直到大海汪洋。", "求道者只要將一切交給靈量。當靈量昇起時，她便會向我們顯示真理。這不是要經過分析的事情。而是要在你身上發生的事實，十分簡單，十分明白。你只要簡單地讓靈量昇起，然後體會昇進後的經驗。然而，懷疑的心靈卻不能有所昇進。", "「那些無知的人，沒有信心的人，懷疑的人都會被淘汰。因為對於那些懷疑的心靈來說，無所謂此世界或更高的世界，也沒有喜樂。我們要對生命有積極的態度，絕不動搖的信心，去追求真理，面對生命。」", "——薄伽梵歌IV：40第七能量中心包含了所有其他的能量中心。上文說過靈體位於心輪，其實在頭頂上正中也有靈體的位置，此亦即靈量穿透，注意力與上天合一的位置。在靈體被喚醒前，每個中心的能量是有限的，但當靈量像一條金線那樣，把所有中心像穿珠般穿透了以後，能量便變成無限。此猶之乎池中的水是靜止有盡的，但源頭活水卻永遠新鮮，無窮無盡。建立了聯繫以後，我們便產生與靈體，與萬有合一的超越感覺。這是生命整合於全體的狀態，不是鬼附，亦非進入了潛意識，而是種生生不息的狀態。在這種狀態中，能量自然而然地流通，不用人為強制。通過靈體的經驗，我們可以體會到絕對真理-。絕對真理是超乎一切猜測、幻想和否定的。在集體無意識中，再沒有形相，再沒有自我，也沒有因果和活動。", "這時，我們便進入了整合的集體意識，成為集體意識的鏡子。靈量的金光喚醒心智，進入不可知的層次。我們的大腦變成集體意識的終端機，執行宇宙的律法。此時再無個人、朋黨或自我觀念的餘地，我們變成普遍存有的一部分，自然而然地得到與上天的聯合和人格整合。通過生命能量，我們毫無困難地進入精微的溝通方式。", "由於超越了自我，我們便能享受真實的美麗，不再受心靈投射的迷惑。從這個觀點看，所有事物都是一齣戲。這是無我的經驗，了解了不變的真實，所有自我認同的幻象都會煙消雲散。在這種狀態下，我們在做各樣活動時，都能保持清醒敏銳的知覺。當人類意識調合到無限，也會變成無限，自然而然得到啓發。古代聖賢曾經頌讚這種境界，詩意地形容為與愛人的聯合。佛陀說是空，大雄說是涅槃，吠陀經說是解脫，耶穌說是進入了上帝的國。", "印度聖人格涅殊羅這樣形容得到自覺後的經驗：「靈量保持她的力量，直至她溶入大梵之中，穩固在頭頂的位置。她張開雙臂，好像說：我便是大梵。這時由五個元素造成的迷幕便會降下，生命能量與大梵合一。靈量之與大梵合一，就好像海水變成雲朵，復下降到江河上，然後回歸大海。同樣，我們個別的靈魂，通過人的形體，與大梵重新合一。」", "「到了那個境界，再沒有知識的對象，所有說法都一是空。心思路絕，言語道斷，所有迷惑的概念都會消失，這個美麗的境界是思想所遠遠不能達到的。它無始無終、無窮無盡，是最偉大的心靈，是宇宙的真正胚胎。練習瑜伽的最終目標正是這種無邊的喜樂。到了這個階段，所有形式都無效用。那些不畏艱辛的求道者最終都會找到真我，那便是最後的歸宿。」", "「到了那個境界，我們再無法感知她的聲音、光亮和偉大。那裡空空如也，仿似心靈停頓，又似風之靜止。那時我們便毋須靜坐，也再沒有妄想和種種概念。到了這個境界，所有那些低層次的元素都融合在一起。」", "-----Ganeshwari 15節這是個人能夠覺知至高靈體的自覺境界，這時上天的愛在我們眼前全幅展現。存在、自覺、喜樂三者合而為一。"];
+  var END_MARK_HTML = '<div class="leaf-foot">◇</div>';
+
+  var track = document.getElementById('track');
+  var book = document.getElementById('book');
+  var dotsWrap = document.getElementById('dots');
+  var curPageEl = document.getElementById('curPage');
+  var totalPageEl = document.getElementById('totalPage');
+  var edgeLeft = document.getElementById('edgeLeft');
+  var edgeRight = document.getElementById('edgeRight');
+  var loadingEl = document.getElementById('loading');
+  var measureInner = document.getElementById('measureInner');
+  var measureOuter = document.getElementById('measure');
+  var globalFill = document.getElementById('globalFill');
+
+  var index = 0;
+  var pages = [];
+  var pageOffsets = [];
+  var dragging = false, startX = 0, startY = 0;
+
+  // ---------- theme ----------
+  function applyTheme(t){
+    document.documentElement.classList.toggle('dark', t === 'dark');
+    document.getElementById('themeLight').classList.toggle('active', t !== 'dark');
+    document.getElementById('themeDark').classList.toggle('active', t === 'dark');
+  }
+  var savedTheme = localStorage.getItem('theme') || 'light';
+  applyTheme(savedTheme);
+  document.getElementById('themeLight').addEventListener('click', function(){
+    localStorage.setItem('theme','light'); applyTheme('light');
+  });
+  document.getElementById('themeDark').addEventListener('click', function(){
+    localStorage.setItem('theme','dark'); applyTheme('dark');
+  });
+
+  // ---------- font scale ----------
+  var savedScale = parseFloat(localStorage.getItem('fontScale') || '1');
+  document.documentElement.style.setProperty('--scale', savedScale);
+  function changeScale(delta){
+    savedScale = Math.max(0.8, Math.min(1.4, Math.round((savedScale + delta) * 100) / 100));
+    document.documentElement.style.setProperty('--scale', savedScale);
+    localStorage.setItem('fontScale', savedScale);
+    rebuild();
+  }
+  document.getElementById('fontMinus').addEventListener('click', function(){ changeScale(-0.1); });
+  document.getElementById('fontPlus').addEventListener('click', function(){ changeScale(0.1); });
+
+  // ---------- overlays ----------
+  var tocOverlay = document.getElementById('tocOverlay');
+  var settingsOverlay = document.getElementById('settingsOverlay');
+  var tocList = document.getElementById('tocList');
+
+  CHAPTER_LIST.forEach(function(ch){
+    var a = document.createElement('a');
+    a.href = ch.file;
+    a.className = 'sheet-item' + (ch.file === CHAPTER_FILE ? ' current' : '');
+    a.innerHTML = '<span class="n">'+ch.num+'</span><span class="t">'+ch.title+'</span>';
+    tocList.appendChild(a);
+  });
+
+  document.getElementById('menuBtn').addEventListener('click', function(){ tocOverlay.classList.add('show'); });
+  document.getElementById('tocClose').addEventListener('click', function(){ tocOverlay.classList.remove('show'); });
+  tocOverlay.addEventListener('click', function(e){ if(e.target === tocOverlay) tocOverlay.classList.remove('show'); });
+
+  document.getElementById('settingsBtn').addEventListener('click', function(){ settingsOverlay.classList.add('show'); });
+  document.getElementById('settingsClose').addEventListener('click', function(){ settingsOverlay.classList.remove('show'); });
+  settingsOverlay.addEventListener('click', function(e){ if(e.target === settingsOverlay) settingsOverlay.classList.remove('show'); });
+
+  // ---------- pagination ----------
+  function wrapPara(text, indent){
+    return '<p' + (indent ? '' : ' class="continued"') + '>' + text + '</p>';
+  }
+
+  function measure(html){
+    measureInner.innerHTML = html;
+    return measureOuter.getBoundingClientRect().height;
+  }
+
+  function maxFit(pageHTML, remaining, indent, limit){
+    var lo = 0, hi = remaining.length, best = 0;
+    while(lo <= hi){
+      var mid = (lo + hi) >> 1;
+      var h = measure(pageHTML + wrapPara(remaining.slice(0, mid), indent));
+      if(h <= limit){ best = mid; lo = mid + 1; } else { hi = mid - 1; }
+    }
+    return best;
+  }
+
+  function globalOffset(paraIdx, charIdx){
+    var off = 0;
+    for(var i=0;i<paraIdx;i++) off += PARAGRAPHS[i].length;
+    return off + charIdx;
+  }
+
+  function paginate(){
+    var leafW = book.clientWidth;
+    measureOuter.style.width = Math.min(leafW, 640) + 'px';
+    measureOuter.style.padding = getComputedStyle(document.querySelector('.leaf') || measureOuter).padding;
+
+    var probe = document.createElement('div');
+    probe.className = 'leaf';
+    probe.style.cssText = 'position:fixed; top:0; left:-9999px; visibility:hidden; width:' + Math.min(leafW,640) + 'px;';
+    probe.style.height = book.clientHeight + 'px';
+    document.body.appendChild(probe);
+    var cs = getComputedStyle(probe);
+    var padTop = parseFloat(cs.paddingTop), padBot = parseFloat(cs.paddingBottom);
+    document.body.removeChild(probe);
+    var availableHeight = book.clientHeight - padTop - padBot;
+
+    pages = [];
+    pageOffsets = [];
+
+    var paraIdx = 0, charIdx = 0;
+    var firstPage = true;
+
+    while(paraIdx < PARAGRAPHS.length){
+      var pageHTML = firstPage ? HEADER_HTML : '';
+      var startOffset = globalOffset(paraIdx, charIdx);
+      var brokeMidPage = false;
+
+      while(paraIdx < PARAGRAPHS.length){
+        var text = PARAGRAPHS[paraIdx];
+        var remaining = text.slice(charIdx);
+        var indent = (charIdx === 0);
+        var candidate = pageHTML + wrapPara(remaining, indent);
+
+        if(measure(candidate) <= availableHeight){
+          pageHTML = candidate;
+          paraIdx++; charIdx = 0;
+          continue;
+        } else {
+          var k = maxFit(pageHTML, remaining, indent, availableHeight);
+          if(k > 0){
+            pageHTML = pageHTML + wrapPara(remaining.slice(0, k), indent);
+            charIdx += k;
+          } else if(pageHTML === (firstPage ? HEADER_HTML : '')){
+            k = Math.max(1, maxFit('', remaining, indent, availableHeight));
+            pageHTML = pageHTML + wrapPara(remaining.slice(0, k), indent);
+            charIdx += k;
+          }
+          brokeMidPage = true;
+          break;
+        }
+      }
+
+      pages.push(pageHTML);
+      pageOffsets.push(startOffset);
+      firstPage = false;
+      if(!brokeMidPage) break;
+    }
+
+    if(pages.length){
+      var lastIdx = pages.length - 1;
+      var withMark = pages[lastIdx] + END_MARK_HTML;
+      if(measure(withMark) <= availableHeight){
+        pages[lastIdx] = withMark;
+      } else {
+        pages.push(END_MARK_HTML);
+        pageOffsets.push(pageOffsets[lastIdx] + 1);
+      }
+    }
+  }
+
+  function renderPages(keepOffset){
+    track.innerHTML = '';
+    dotsWrap.innerHTML = '';
+    pages.forEach(function(html){
+      var leaf = document.createElement('div');
+      leaf.className = 'leaf';
+      var inner = document.createElement('div');
+      inner.className = 'leaf-inner';
+      inner.innerHTML = html;
+      leaf.appendChild(inner);
+      track.appendChild(leaf);
+
+      var dot = document.createElement('div');
+      dot.className = 'dot';
+      dotsWrap.appendChild(dot);
+    });
+    totalPageEl.textContent = pages.length;
+
+    var target = 0;
+    if(typeof keepOffset === 'number'){
+      for(var i=0;i<pageOffsets.length;i++){
+        if(pageOffsets[i] <= keepOffset) target = i; else break;
+      }
+    }
+    goTo(target, false);
+  }
+
+  function leafWidth(){ return book.clientWidth; }
+
+  function saveProgress(){
+    try{
+      var offset = pageOffsets[index] || 0;
+      localStorage.setItem('progress:' + CHAPTER_FILE, offset);
+      localStorage.setItem('lastRead', JSON.stringify({file: CHAPTER_FILE, title: '第十三章　頂輪（Sahasrara Chakra）'}));
+    }catch(e){}
+  }
+
+  function updateGlobalBar(){
+    var localOffset = pageOffsets[index] || 0;
+    var pct = ((BASE_OFFSET + localOffset) / TOTAL_CHARS) * 100;
+    globalFill.style.width = Math.max(0, Math.min(100, pct)) + '%';
+  }
+
+  function goTo(i, animate){
+    index = Math.max(0, Math.min(pages.length - 1, i));
+    var w = leafWidth();
+    track.classList.toggle('no-anim', animate === false);
+    track.style.transform = 'translateX(' + (-index * w) + 'px)';
+    var dots = dotsWrap.children;
+    for(var n=0;n<dots.length;n++) dots[n].classList.toggle('active', n === index);
+    curPageEl.textContent = index + 1;
+    edgeLeft.classList.toggle('show', index > 0);
+    edgeRight.classList.toggle('show', index < pages.length - 1);
+    updateGlobalBar();
+    saveProgress();
+  }
+
+  function rebuild(){
+    var savedOffset = null;
+    try{
+      var raw = localStorage.getItem('progress:' + CHAPTER_FILE);
+      if(raw !== null) savedOffset = parseFloat(raw);
+    }catch(e){}
+    var keepOffset = savedOffset !== null ? savedOffset : (pageOffsets.length ? pageOffsets[index] : 0);
+    paginate();
+    renderPages(keepOffset);
+    loadingEl.style.display = 'none';
+  }
+
+  var resizeTimer = null;
+  window.addEventListener('resize', function(){
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(rebuild, 200);
+  });
+  window.addEventListener('orientationchange', function(){
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(rebuild, 250);
+  });
+
+  book.addEventListener('touchstart', function(e){
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    dragging = true;
+    track.classList.add('no-anim');
+  }, {passive:true});
+
+  book.addEventListener('touchmove', function(e){
+    if(!dragging) return;
+    var dx = e.touches[0].clientX - startX;
+    var dy = e.touches[0].clientY - startY;
+    if(Math.abs(dy) > Math.abs(dx)) return;
+    var w = leafWidth();
+    track.style.transform = 'translateX(' + (-index * w + dx) + 'px)';
+  }, {passive:true});
+
+  book.addEventListener('touchend', function(e){
+    if(!dragging) return;
+    dragging = false;
+    var dx = e.changedTouches[0].clientX - startX;
+    var w = leafWidth();
+    track.classList.remove('no-anim');
+    if(Math.abs(dx) > w * 0.18){
+      if(dx < 0){
+        if(index >= pages.length - 1 && NEXT_FILE){
+          window.location.href = NEXT_FILE;
+        } else {
+          goTo(index + 1);
+        }
+      } else {
+        if(index <= 0 && PREV_FILE){
+          window.location.href = PREV_FILE;
+        } else {
+          goTo(index - 1);
+        }
+      }
+    } else {
+      goTo(index);
+    }
+  });
+
+  edgeLeft.addEventListener('click', function(){
+    if(index <= 0 && PREV_FILE) window.location.href = PREV_FILE; else goTo(index - 1);
+  });
+  edgeRight.addEventListener('click', function(){
+    if(index >= pages.length - 1 && NEXT_FILE) window.location.href = NEXT_FILE; else goTo(index + 1);
+  });
+
+  document.addEventListener('keydown', function(e){
+    if(e.key === 'ArrowRight') edgeRight.click();
+    if(e.key === 'ArrowLeft') edgeLeft.click();
+  });
+
+  window.addEventListener('load', function(){ setTimeout(rebuild, 30); });
+  if(document.readyState === 'complete'){ setTimeout(rebuild, 30); }
+})();
+</script>
+
+</body>
+</html>

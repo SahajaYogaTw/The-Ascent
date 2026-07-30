@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>目錄　生命的升進</title>
+<style>
+  :root{
+    --gold:#d9c690;
+    --soft:#1f3d2b;
+    --card:#26472f;
+    --muted:#bcd0bf;
+    --ink:#ffffff;
+    --line:rgba(255,255,255,0.14);
+    --scale:1;
+  }
+  :root.light{
+    --gold:#b8975f;
+    --soft:#f7f4ee;
+    --card:#fffdf9;
+    --muted:#9c9484;
+    --ink:#4a4238;
+    --line:#e8e2d6;
+  }
+
+  *{box-sizing:border-box;}
+
+  body{
+    margin:0; padding:0; min-height:100vh;
+    background:var(--soft);
+    font-family:"Noto Serif TC","PMingLiU","Songti TC",serif;
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+    transition:background 200ms ease, color 200ms ease;
+  }
+
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    max-width:640px; margin:0 auto; padding:16px 20px 0;
+  }
+  .iconbtn{ background:none; border:none; color:var(--muted); font-size:16px; padding:6px 8px; cursor:pointer; }
+
+  .page{ max-width:640px; margin:0 auto; padding:20px 28px 90px; }
+
+  .eyebrow{ text-align:center; font-size:12px; letter-spacing:0.32em; color:var(--gold); margin-bottom:14px; }
+  h1{ text-align:center; font-size:26px; font-weight:600; letter-spacing:0.16em; margin:0 0 40px; }
+
+  .continue-banner{
+    display:none;
+    background:var(--card);
+    border:1px solid var(--gold);
+    border-radius:14px;
+    padding:14px 18px;
+    margin-bottom:26px;
+    text-decoration:none;
+    color:var(--ink);
+    font-size:13px;
+    letter-spacing:0.05em;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .continue-banner .go{ color:var(--gold); font-size:12px; }
+
+  .toc{ background:var(--card); border-radius:18px; overflow:hidden; }
+  .chapter{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:18px 22px; text-decoration:none; color:var(--ink);
+    border-bottom:1px solid var(--line);
+    font-size:calc(15.5px * var(--scale));
+  }
+  .chapter:last-child{ border-bottom:none; }
+  .chapter .num{ font-size:11px; color:var(--gold); letter-spacing:0.1em; width:34px; flex:0 0 auto; }
+  .chapter .name{ flex:1 1 auto; letter-spacing:0.03em; padding:0 8px; }
+  .chapter .arrow{ font-size:13px; color:var(--muted); flex:0 0 auto; }
+
+  .footer{ text-align:center; margin-top:50px; font-size:12px; color:var(--muted); letter-spacing:0.12em; line-height:1.9; }
+
+  .booknav{
+    display:flex; align-items:center; justify-content:space-between; gap:8px;
+    margin-top:36px; padding-top:18px; border-top:1px solid rgba(0,0,0,0.1);
+  }
+  .booknav a, .booknav span{ font-size:12px; letter-spacing:0.08em; color:var(--muted); text-decoration:none; padding:6px 4px; }
+  .booknav a{ color:var(--ink); }
+  .booknav .home{ color:var(--gold); letter-spacing:0.2em; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <button class="iconbtn" id="fontMinus">A-</button>
+  <button class="iconbtn" id="fontPlus">A+</button>
+  <button class="iconbtn" id="themeBtn">☼</button>
+</div>
+
+<div class="page">
+
+  <div class="eyebrow">CONTENTS</div>
+  <h1>目　錄</h1>
+
+  <a class="continue-banner" id="continueBanner">
+    <span id="continueText"></span>
+    <span class="go">繼續閱讀 ›</span>
+  </a>
+
+  <div class="toc">
+    <a class="chapter" href="chapter_1.html"><span class="num">01</span><span class="name">求道者</span><span class="arrow">›</span></a>
+    <a class="chapter" href="chapter_2.html"><span class="num">02</span><span class="name">靈量（Kundalini）</span><span class="arrow">›</span></a>
+    <a class="chapter" href="chapter_3.html"><span class="num">03</span><span class="name">陰脈、陽脈和中脈</span><span class="arrow">›</span></a>
+    <a class="chapter" href="chapter_4.html"><span class="num">04</span><span class="name">人體小宇宙</span><span class="arrow">›</span></a>
+    <a class="chapter" href="chapter_5.html"><span class="num">05</span><span class="name">根輪（Mooladhara Chakra）</span><span class="arrow">›</span></a>
+    <a class="chapter" href="chapter_6.html"><span class="num">06</span><span class="name">腹輪（Swadisthan Chakra）</span><span class="arrow">›</span></a>
+    <a class="chapter" href="chapter_7.html"><span class="num">07</span><span class="name">臍輪（Nabhi Chakra）</span><span class="arrow">›</span></a>
+    <a class="chapter" href="chapter_8.html"><span class="num">08</span><span class="name">集體意識</span><span class="arrow">›</span></a>
+    <a class="chapter" href="chapter_9.html"><span class="num">09</span><span class="name">十大宗師</span><span class="arrow">›</span></a>
+    <a class="chapter" href="chapter_10.html"><span class="num">10</span><span class="name">心輪（Heart Chakra）</span><span class="arrow">›</span></a>
+    <a class="chapter" href="chapter_11.html"><span class="num">11</span><span class="name">喉輪（Visshudhi Chakra）</span><span class="arrow">›</span></a>
+    <a class="chapter" href="chapter_12.html"><span class="num">12</span><span class="name">額輪（Agnya Chakra）</span><span class="arrow">›</span></a>
+    <a class="chapter" href="chapter_13.html"><span class="num">13</span><span class="name">頂輪（Sahasrara Chakra）</span><span class="arrow">›</span></a>
+    <a class="chapter" href="chapter_14.html"><span class="num">14</span><span class="name">神聖的生命能量</span><span class="arrow">›</span></a>
+    <a class="chapter" href="chapter_15.html"><span class="num">15</span><span class="name">靜坐冥想</span><span class="arrow">›</span></a>
+    <a class="chapter" href="chapter_16.html"><span class="num">16</span><span class="name">萬物之母</span><span class="arrow">›</span></a>
+    <a class="chapter" href="chapter_17.html"><span class="num">17</span><span class="name">後記</span><span class="arrow">›</span></a>
+  </div>
+
+  <div class="footer">霎哈嘉瑜伽　Sahaja Yoga</div>
+
+  <div class="booknav">
+    <a href="preface.html">‹ 上一頁</a>
+    <a class="home" href="index.html">回首頁</a>
+    <a href="chapter_1.html">下一頁 ›</a>
+  </div>
+
+</div>
+
+<script>
+  var root = document.documentElement;
+  var savedTheme = localStorage.getItem('theme') || 'light';
+  root.classList.toggle('light', savedTheme === 'light');
+  var themeBtn = document.getElementById('themeBtn');
+  themeBtn.textContent = savedTheme === 'light' ? '☾' : '☼';
+  themeBtn.addEventListener('click', function(){
+    var next = root.classList.contains('light') ? 'dark' : 'light';
+    root.classList.toggle('light', next === 'light');
+    localStorage.setItem('theme', next);
+    themeBtn.textContent = next === 'light' ? '☾' : '☼';
+  });
+
+  var savedScale = parseFloat(localStorage.getItem('fontScale') || '1');
+  root.style.setProperty('--scale', savedScale);
+  function changeScale(delta){
+    savedScale = Math.max(0.8, Math.min(1.4, Math.round((savedScale + delta) * 100) / 100));
+    root.style.setProperty('--scale', savedScale);
+    localStorage.setItem('fontScale', savedScale);
+  }
+  document.getElementById('fontMinus').addEventListener('click', function(){ changeScale(-0.1); });
+  document.getElementById('fontPlus').addEventListener('click', function(){ changeScale(0.1); });
+
+  try{
+    var last = JSON.parse(localStorage.getItem('lastRead') || 'null');
+    if(last && last.file){
+      var banner = document.getElementById('continueBanner');
+      banner.href = last.file;
+      document.getElementById('continueText').textContent = '上次讀到：' + last.title;
+      banner.style.display = 'flex';
+    }
+  }catch(e){}
+</script>
+
+</body>
+</html>

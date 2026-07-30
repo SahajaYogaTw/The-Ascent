@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>第七章　臍輪（Nabhi Chakra）</title>
+<style>
+  :root{
+    --gold:#b8975f;
+    --soft:#f7f4ee;
+    --card:#fffdf9;
+    --muted:#9c9484;
+    --ink:#4a4238;
+    --scale:1;
+  }
+
+  :root.dark{
+    --gold:#d9c690;
+    --soft:#1b1613;
+    --card:#241d19;
+    --muted:#8a7d72;
+    --ink:#f1ece4;
+  }
+
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+
+  html,body{
+    margin:0;
+    padding:0;
+    height:100%;
+    background:var(--soft);
+    font-family:"Noto Serif TC","PMingLiU","Songti TC",serif;
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+    overflow:hidden;
+    transition:background 200ms ease, color 200ms ease;
+  }
+
+  .app{
+    position:relative;
+    height:100vh;
+    max-width:640px;
+    margin:0 auto;
+    display:flex;
+    flex-direction:column;
+  }
+
+  .globalbar{
+    flex:0 0 auto;
+    height:2px;
+    background:rgba(0,0,0,0.06);
+  }
+  .globalbar-fill{
+    height:100%;
+    background:var(--gold);
+    width:0%;
+    transition:width 300ms ease;
+  }
+
+  .topbar{
+    flex:0 0 auto;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:6px;
+    padding:14px 14px 8px;
+    z-index:20;
+  }
+
+  .iconbtn{
+    background:none;
+    border:none;
+    color:var(--muted);
+    font-size:17px;
+    line-height:1;
+    padding:6px 8px;
+    cursor:pointer;
+    flex:0 0 auto;
+  }
+
+  .topbar .title{
+    flex:1 1 auto;
+    text-align:center;
+    font-size:12px;
+    letter-spacing:0.2em;
+    color:var(--gold);
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+
+  .topbar .counter{
+    flex:0 0 auto;
+    font-size:11px;
+    letter-spacing:0.05em;
+    color:var(--muted);
+    padding:0 2px;
+  }
+
+  .book{
+    position:relative;
+    flex:1 1 auto;
+    overflow:hidden;
+  }
+
+  .track{
+    position:absolute;
+    top:0; left:0;
+    height:100%;
+    display:flex;
+    transition:transform 380ms cubic-bezier(.22,.61,.36,1);
+    will-change:transform;
+  }
+  .track.no-anim{ transition:none; }
+
+  .leaf{
+    flex:0 0 100vw;
+    max-width:640px;
+    height:100%;
+    padding:8px 26px 20px;
+    overflow:hidden;
+  }
+
+  .leaf-inner{ display:block; }
+
+  .chapter-head{ text-align:center; margin-bottom:30px; }
+  .chapter-head .eyebrow{ font-size:11px; letter-spacing:0.32em; color:var(--gold); margin-bottom:8px; }
+  .chapter-head h1{ font-size:24px; font-weight:600; letter-spacing:0.14em; margin:0 0 8px; }
+  .chapter-head .divider{ color:var(--gold); font-size:14px; letter-spacing:0.4em; margin-top:14px; }
+
+  .leaf-inner p{
+    font-size:calc(16.5px * var(--scale));
+    line-height:1.98;
+    letter-spacing:0.02em;
+    margin:0 0 22px;
+    text-indent:2em;
+  }
+  .leaf-inner p:last-child{ margin-bottom:0; }
+  .leaf-inner p.continued{ text-indent:0; }
+
+  .leaf-foot{ text-align:center; margin-top:10px; font-size:13px; color:var(--gold); letter-spacing:0.15em; }
+
+  .dots{
+    flex:0 0 auto;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    gap:9px;
+    padding:12px 0 14px;
+    z-index:20;
+    flex-wrap:wrap;
+  }
+
+  .dot{ width:6px; height:6px; border-radius:50%; background:var(--muted); opacity:0.35; transition:all 260ms ease; }
+  .dot.active{ opacity:1; background:var(--gold); width:16px; border-radius:3px; }
+
+  .edge{
+    position:absolute; top:0; height:100%; width:34px; z-index:15;
+    display:flex; align-items:center; justify-content:center;
+    color:var(--muted); font-size:15px; opacity:0;
+    transition:opacity 200ms ease; pointer-events:none;
+  }
+  .edge.show{ opacity:0.5; }
+  .edge.left{ left:0; }
+  .edge.right{ right:0; }
+
+  .loading{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    color:var(--muted); font-size:13px; letter-spacing:0.2em;
+  }
+
+  .booknav{
+    flex:0 0 auto;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    padding:10px 20px 16px;
+    border-top:1px solid rgba(0,0,0,0.06);
+    z-index:20;
+  }
+  .booknav a, .booknav span{ font-size:12px; letter-spacing:0.08em; color:var(--muted); text-decoration:none; padding:6px 4px; }
+  .booknav a{ color:var(--ink); }
+  .booknav .home{ color:var(--gold); letter-spacing:0.2em; }
+  .booknav .disabled{ color:var(--muted); opacity:0.4; pointer-events:none; }
+
+  .overlay{
+    position:fixed; inset:0; z-index:100;
+    background:rgba(0,0,0,0.45);
+    display:none;
+    align-items:flex-end;
+  }
+  .overlay.show{ display:flex; }
+
+  .sheet{
+    background:var(--card);
+    width:100%;
+    max-width:640px;
+    margin:0 auto;
+    max-height:78vh;
+    border-radius:20px 20px 0 0;
+    padding:18px 0 max(18px, env(safe-area-inset-bottom));
+    display:flex;
+    flex-direction:column;
+  }
+
+  .sheet-head{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:0 20px 14px;
+    font-size:12px; letter-spacing:0.2em; color:var(--gold);
+  }
+  .sheet-head button{
+    background:none; border:none; color:var(--muted); font-size:18px; padding:4px 8px; cursor:pointer;
+  }
+
+  .sheet-list{ overflow-y:auto; padding:0 8px; }
+  .sheet-item{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:13px 12px;
+    text-decoration:none;
+    color:var(--ink);
+    border-bottom:1px solid rgba(0,0,0,0.06);
+    font-size:14.5px;
+  }
+  .sheet-item.current{ color:var(--gold); }
+  .sheet-item:last-child{ border-bottom:none; }
+  .sheet-item .n{ color:var(--gold); font-size:11px; width:28px; flex:0 0 auto; }
+  .sheet-item .t{ flex:1 1 auto; padding:0 6px; }
+
+  .settings-body{ padding:6px 20px 10px; }
+  .setting-row{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 0;
+    border-bottom:1px solid rgba(0,0,0,0.06);
+  }
+  .setting-row:last-child{ border-bottom:none; }
+  .setting-label{ font-size:13px; color:var(--muted); letter-spacing:0.08em; }
+  .setting-controls{ display:flex; align-items:center; gap:10px; }
+  .pillbtn{
+    background:none;
+    border:1px solid var(--muted);
+    color:var(--ink);
+    width:32px; height:32px;
+    border-radius:50%;
+    font-size:14px;
+    cursor:pointer;
+  }
+  .theme-toggle{
+    display:flex; border:1px solid var(--muted); border-radius:16px; overflow:hidden;
+  }
+  .theme-toggle button{
+    background:none; border:none; color:var(--muted); font-size:14px; padding:6px 14px; cursor:pointer;
+  }
+  .theme-toggle button.active{ background:var(--gold); color:var(--card); }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <div class="globalbar"><div class="globalbar-fill" id="globalFill"></div></div>
+
+  <div class="topbar">
+    <button class="iconbtn" id="menuBtn" aria-label="目錄">☰</button>
+    <span class="title">第七章　臍輪（Nabhi Chakra）</span>
+    <span class="counter"><span id="curPage">1</span>/<span id="totalPage">…</span></span>
+    <button class="iconbtn" id="settingsBtn" aria-label="設定">⚙</button>
+  </div>
+
+  <div class="book" id="book">
+    <div class="edge left" id="edgeLeft">‹</div>
+    <div class="edge right" id="edgeRight">›</div>
+    <div class="loading" id="loading">排版中 ◇</div>
+    <div class="track no-anim" id="track"></div>
+  </div>
+
+  <div class="dots" id="dots"></div>
+
+  <div class="booknav">
+    <a href="chapter_6.html">‹ 上一頁</a>
+    <a class="home" href="index.html">回首頁</a>
+    <a href="chapter_8.html">下一頁 ›</a>
+  </div>
+
+</div>
+
+<div class="overlay" id="tocOverlay">
+  <div class="sheet">
+    <div class="sheet-head">
+      <span>目　錄</span>
+      <button id="tocClose">✕</button>
+    </div>
+    <div class="sheet-list" id="tocList"></div>
+  </div>
+</div>
+
+<div class="overlay" id="settingsOverlay">
+  <div class="sheet">
+    <div class="sheet-head">
+      <span>設　定</span>
+      <button id="settingsClose">✕</button>
+    </div>
+    <div class="settings-body">
+      <div class="setting-row">
+        <span class="setting-label">字級</span>
+        <div class="setting-controls">
+          <button class="pillbtn" id="fontMinus">A-</button>
+          <button class="pillbtn" id="fontPlus">A+</button>
+        </div>
+      </div>
+      <div class="setting-row">
+        <span class="setting-label">模式</span>
+        <div class="theme-toggle">
+          <button id="themeLight">☼ 日</button>
+          <button id="themeDark">☾ 夜</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="measure" class="leaf" style="position:fixed; top:0; left:-9999px; visibility:hidden; height:auto; overflow:visible;">
+  <div class="leaf-inner" id="measureInner"></div>
+</div>
+
+<script>
+(function(){
+
+  var CHAPTER_FILE = "chapter_7.html";
+  var BASE_OFFSET = 13168;
+  var TOTAL_CHARS = 41770;
+  var PREV_FILE = "chapter_6.html";
+  var NEXT_FILE = "chapter_8.html";
+  var CHAPTER_LIST = [{"num": "01", "title": "求道者", "file": "chapter_1.html"}, {"num": "02", "title": "靈量（Kundalini）", "file": "chapter_2.html"}, {"num": "03", "title": "陰脈、陽脈和中脈", "file": "chapter_3.html"}, {"num": "04", "title": "人體小宇宙", "file": "chapter_4.html"}, {"num": "05", "title": "根輪（Mooladhara Chakra）", "file": "chapter_5.html"}, {"num": "06", "title": "腹輪（Swadisthan Chakra）", "file": "chapter_6.html"}, {"num": "07", "title": "臍輪（Nabhi Chakra）", "file": "chapter_7.html"}, {"num": "08", "title": "集體意識", "file": "chapter_8.html"}, {"num": "09", "title": "十大宗師", "file": "chapter_9.html"}, {"num": "10", "title": "心輪（Heart Chakra）", "file": "chapter_10.html"}, {"num": "11", "title": "喉輪（Visshudhi Chakra）", "file": "chapter_11.html"}, {"num": "12", "title": "額輪（Agnya Chakra）", "file": "chapter_12.html"}, {"num": "13", "title": "頂輪（Sahasrara Chakra）", "file": "chapter_13.html"}, {"num": "14", "title": "神聖的生命能量", "file": "chapter_14.html"}, {"num": "15", "title": "靜坐冥想", "file": "chapter_15.html"}, {"num": "16", "title": "萬物之母", "file": "chapter_16.html"}, {"num": "17", "title": "後記", "file": "chapter_17.html"}];
+
+  var HEADER_HTML =
+    '<div class="chapter-head">'+
+      '<div class="eyebrow">NABHI CHAKRA</div>'+
+      '<h1>第七章　臍輪（Nabhi Chakra）</h1>'+
+      '<div class="divider">❖</div>'+
+    '</div>';
+
+  var PARAGRAPHS = ["人口多了，便形成社會和國家。人類有需要組織社會，訂下基本的規則，保障社會的和諧運作。離群索居會使人不能和諧地生活在進化的律則當中，因此不能昇進，實現他的根源。通過理性，我們不能發現正確的生活方式，因為理性未經轉化時是不成熟的。上天無窮無限，不可能通過有限的理性來理解。然而，我們卻可以通過靈體來經驗它。此所以我們要時刻把注意力放在靈體之上。然而要把意識放在精微事物之上，人本身也要先變得敏銳。正法（Dharma）即正確的行為法則可以幫助我們進入這個敏銳的境界。", "錫呂．瑪塔吉女士這樣解釋：「炭有四個原子價，金有經常保持光澤的性質。同樣，正法是人類社會持續的真正本質。人類從亞米巴蟲進化到現在這個階段，是通過正法，即進化的律則的。這些法則保護和滋養著生命體的靈性發展。」所以，人類進化的第三個階段是獲得正法，如摩西所傳的十誡。", "自覺地遵從這些法則是人類生存和成長的根。不守正法便如同撒下癌症的種子，癌細胞會迅速蔓延，並最後毀滅了人類和與他息息相關的自然。", "第三中心也叫臍輪，是福德和財用的中心。當人類的創造力進一步發展，他們便懂得利用大自然的資源來改善生活。當社會繁榮起來，對金錢的欲望也會增加。繁榮是進化的必經步驟。要使人類正常生活，我們有需要用錢來作交換媒介，以滿足生活的基本需要。如果一個人衣食不保，那麼物質的需要便變得很重要。我們很幸運，上天賜給我們才智和具有多重作用的身體，使我們能夠工作，滿足各種需要。我們一方面可以向上昇進，另方面不必拋棄世俗的責任。", "可是有時候我們會迷失了自己，我們得一，便會想二，最後迷失在物質主義之中。擁有財富沒有甚麼過錯，問題只是過分沉迷。例如為錢本身而賺錢便是貪欲，超過了基本的需要，便成為一種陷溺。如果一個人一毛不拔，囤積貨財，他便是妨礙了貨幣的流通，這是一種自私自利，心靈未得進化的表現，他不了解生命的基本道理。", "在薄伽梵歌（Bhagavad Gita）一書，克里希納（Krishna）告訴阿周拿（Arjuna）要多賺些錢，好使他有能力付出多些。從根本地說，如果沒有人有能力施予，那麼誰去幫助那些有需要的貧苦人呢？富人窮人都是宇宙大有的一部分。因此如果富人賑濟窮人，不但幫助了他們，還有平衡的作用。但如果富人不把財富與人共享，便變成不平等，失去平衡。於是貧者越貧，富者越富。問題的答案不在於共產主義還是資本主義，而是改變我們對錢財的態度。成熟和平衡的人能為集體創立積極的制度。分享是慷慨的表現，有助昇進，而囤積卻會導致停滯，那種人會對社會帶來危害。", "印度的財富女神拉希什米（Laxmi）把財富的性質表示得維肖維妙，她一手接受，一手施予。臍輪右部掌管肝臟，同時負責我們在物質界的行動，例如錢財的管理、商務、計劃將來、邏輯思維等。不良的飮食，如過度肥膩的食物，酒類，毒品和藥物，都會影響到這個部位。過度思維也一樣會造成不良影響。其病徵是思想模糊、不能面對將來、生活不檢、財政紊亂、缺乏邏輯思維的能力等。", "家庭生活穩定與否亦會影響臍輪左部。如果丈夫不尊重妻子，或發生了家庭糾紛，臍輪左部便會受到影響。臍輪左部能帶來內在的平靜和滿足。內在的滿足和諧使人的性格平衡，向上昇進。過分匆忙會刺激臍輪左部，使人變得慌張失措，坐立不安，惶惶不可終日。這時，人便失去平衡，易於疏忽犯錯，惶恐和擔憂取代了自我節制的能力。在大部分的情況下，憂慮都是由不受駕御的想像力引起的。這種人專門虐殺喜樂，他們自己不能放鬆，也不讓別人放鬆。雖然緊張如命，費剎經營，他們往往都一無所得，不碰得焦頭爛額便算好了。", "我們不但要對別人有耐心，對自己也要有耐心。許多時，如果我們不能達到對自己的要求，我們便會覺得沮喪。我們要記著：人不是按時鐘辦事的機器。我們的稟性是歷世進化而成的。人類的努力固然可以作多少的修正，改進錯誤或者精益求精，但這是需要時間的。我們要接受自然的發展過程，讓我們，慢慢成熟。這不同於消極主義，因為我們不是說要消極地任命運安排。相反我們是有意識地使事情發生。在薄伽梵歌，克里希納教導亞周拿，叫他忠實執行他的義務，不必求報。如果我們要評判自己，我們應因為自己曾盡全力而感到滿足。", "如果我們明白到這一點，一方面竭盡全力，另方面對自己有耐心，這樣，我們便會活得快樂。-臍輪左部獲得平靜不但為自己帶來平安，還會為周圍的人帶來祥和喜樂。此猶之乎如果我們內在美麗，外表也會相繼美麗。隨著平安而來的是財用，不但個人花費不缺，集體也會財用充足。臍輪可以帶來八種恩賜：繁榮、吉運、尊嚴、靈性上昇、純潔的知識、家庭和集體的喜樂、財富，還有成功。", "如果胃部功能受損，便會危害消化和吸收的過程。第三中心掌管胃部和肝臟的上部。因此，照顧胃部很重要。我們對食物的態度，和我們吃些甚麼都會影響胃液的分泌和有關的腺體。如果進食時太快，動怒或擔憂，食物便會消化得不好。因為能量大量消耗，胃部肌肉會變得緊張，不能自由地消化食物。我們應該享受平衡的飲食，開心愉快地讓食物進入胃部，然後讓胃液與食物融合，身體便會受到滋養。吃得安樂也是一種靜坐冥想。", "胃部是很敏感的器官。你知道一部液化器需要消耗多少電力嗎？如果一部液化器鬆脫了一顆螺絲釘，它也不能正常運作了。然而儘管得不到好好的照顧，胃部還是發揮出比液化器更大的功能。", "胡亂禁食也會損害這個中心。禁食不能與神接觸。胃部需要定時進食和適當的食物，不可以拿來開玩笑。只有在某種健康狀況下，有適當的指導，才能進行禁食。然而禁食本身在靈性修養上沒有重要性。如果腦子裡還是不斷想著食物，禁食又有甚麼作用呢？如果我們的身體不要進食，它自然會發出訊號。霎哈嘉瑜伽是自然而然的，反對所有否定自我和違反自然的行為。上帝已經為我們擺下了筵席，我們卻拒絕赴宴。奉神之名禁食是最令人難堪的。我們會在生日、結婚或其他大喜的日子禁食嗎？且讓我們重溫奧義書（Upanishad）的說法：整個世界是神的外衣，捨棄它，然後得回它。"];
+  var END_MARK_HTML = '<div class="leaf-foot">◇</div>';
+
+  var track = document.getElementById('track');
+  var book = document.getElementById('book');
+  var dotsWrap = document.getElementById('dots');
+  var curPageEl = document.getElementById('curPage');
+  var totalPageEl = document.getElementById('totalPage');
+  var edgeLeft = document.getElementById('edgeLeft');
+  var edgeRight = document.getElementById('edgeRight');
+  var loadingEl = document.getElementById('loading');
+  var measureInner = document.getElementById('measureInner');
+  var measureOuter = document.getElementById('measure');
+  var globalFill = document.getElementById('globalFill');
+
+  var index = 0;
+  var pages = [];
+  var pageOffsets = [];
+  var dragging = false, startX = 0, startY = 0;
+
+  // ---------- theme ----------
+  function applyTheme(t){
+    document.documentElement.classList.toggle('dark', t === 'dark');
+    document.getElementById('themeLight').classList.toggle('active', t !== 'dark');
+    document.getElementById('themeDark').classList.toggle('active', t === 'dark');
+  }
+  var savedTheme = localStorage.getItem('theme') || 'light';
+  applyTheme(savedTheme);
+  document.getElementById('themeLight').addEventListener('click', function(){
+    localStorage.setItem('theme','light'); applyTheme('light');
+  });
+  document.getElementById('themeDark').addEventListener('click', function(){
+    localStorage.setItem('theme','dark'); applyTheme('dark');
+  });
+
+  // ---------- font scale ----------
+  var savedScale = parseFloat(localStorage.getItem('fontScale') || '1');
+  document.documentElement.style.setProperty('--scale', savedScale);
+  function changeScale(delta){
+    savedScale = Math.max(0.8, Math.min(1.4, Math.round((savedScale + delta) * 100) / 100));
+    document.documentElement.style.setProperty('--scale', savedScale);
+    localStorage.setItem('fontScale', savedScale);
+    rebuild();
+  }
+  document.getElementById('fontMinus').addEventListener('click', function(){ changeScale(-0.1); });
+  document.getElementById('fontPlus').addEventListener('click', function(){ changeScale(0.1); });
+
+  // ---------- overlays ----------
+  var tocOverlay = document.getElementById('tocOverlay');
+  var settingsOverlay = document.getElementById('settingsOverlay');
+  var tocList = document.getElementById('tocList');
+
+  CHAPTER_LIST.forEach(function(ch){
+    var a = document.createElement('a');
+    a.href = ch.file;
+    a.className = 'sheet-item' + (ch.file === CHAPTER_FILE ? ' current' : '');
+    a.innerHTML = '<span class="n">'+ch.num+'</span><span class="t">'+ch.title+'</span>';
+    tocList.appendChild(a);
+  });
+
+  document.getElementById('menuBtn').addEventListener('click', function(){ tocOverlay.classList.add('show'); });
+  document.getElementById('tocClose').addEventListener('click', function(){ tocOverlay.classList.remove('show'); });
+  tocOverlay.addEventListener('click', function(e){ if(e.target === tocOverlay) tocOverlay.classList.remove('show'); });
+
+  document.getElementById('settingsBtn').addEventListener('click', function(){ settingsOverlay.classList.add('show'); });
+  document.getElementById('settingsClose').addEventListener('click', function(){ settingsOverlay.classList.remove('show'); });
+  settingsOverlay.addEventListener('click', function(e){ if(e.target === settingsOverlay) settingsOverlay.classList.remove('show'); });
+
+  // ---------- pagination ----------
+  function wrapPara(text, indent){
+    return '<p' + (indent ? '' : ' class="continued"') + '>' + text + '</p>';
+  }
+
+  function measure(html){
+    measureInner.innerHTML = html;
+    return measureOuter.getBoundingClientRect().height;
+  }
+
+  function maxFit(pageHTML, remaining, indent, limit){
+    var lo = 0, hi = remaining.length, best = 0;
+    while(lo <= hi){
+      var mid = (lo + hi) >> 1;
+      var h = measure(pageHTML + wrapPara(remaining.slice(0, mid), indent));
+      if(h <= limit){ best = mid; lo = mid + 1; } else { hi = mid - 1; }
+    }
+    return best;
+  }
+
+  function globalOffset(paraIdx, charIdx){
+    var off = 0;
+    for(var i=0;i<paraIdx;i++) off += PARAGRAPHS[i].length;
+    return off + charIdx;
+  }
+
+  function paginate(){
+    var leafW = book.clientWidth;
+    measureOuter.style.width = Math.min(leafW, 640) + 'px';
+    measureOuter.style.padding = getComputedStyle(document.querySelector('.leaf') || measureOuter).padding;
+
+    var probe = document.createElement('div');
+    probe.className = 'leaf';
+    probe.style.cssText = 'position:fixed; top:0; left:-9999px; visibility:hidden; width:' + Math.min(leafW,640) + 'px;';
+    probe.style.height = book.clientHeight + 'px';
+    document.body.appendChild(probe);
+    var cs = getComputedStyle(probe);
+    var padTop = parseFloat(cs.paddingTop), padBot = parseFloat(cs.paddingBottom);
+    document.body.removeChild(probe);
+    var availableHeight = book.clientHeight - padTop - padBot;
+
+    pages = [];
+    pageOffsets = [];
+
+    var paraIdx = 0, charIdx = 0;
+    var firstPage = true;
+
+    while(paraIdx < PARAGRAPHS.length){
+      var pageHTML = firstPage ? HEADER_HTML : '';
+      var startOffset = globalOffset(paraIdx, charIdx);
+      var brokeMidPage = false;
+
+      while(paraIdx < PARAGRAPHS.length){
+        var text = PARAGRAPHS[paraIdx];
+        var remaining = text.slice(charIdx);
+        var indent = (charIdx === 0);
+        var candidate = pageHTML + wrapPara(remaining, indent);
+
+        if(measure(candidate) <= availableHeight){
+          pageHTML = candidate;
+          paraIdx++; charIdx = 0;
+          continue;
+        } else {
+          var k = maxFit(pageHTML, remaining, indent, availableHeight);
+          if(k > 0){
+            pageHTML = pageHTML + wrapPara(remaining.slice(0, k), indent);
+            charIdx += k;
+          } else if(pageHTML === (firstPage ? HEADER_HTML : '')){
+            k = Math.max(1, maxFit('', remaining, indent, availableHeight));
+            pageHTML = pageHTML + wrapPara(remaining.slice(0, k), indent);
+            charIdx += k;
+          }
+          brokeMidPage = true;
+          break;
+        }
+      }
+
+      pages.push(pageHTML);
+      pageOffsets.push(startOffset);
+      firstPage = false;
+      if(!brokeMidPage) break;
+    }
+
+    if(pages.length){
+      var lastIdx = pages.length - 1;
+      var withMark = pages[lastIdx] + END_MARK_HTML;
+      if(measure(withMark) <= availableHeight){
+        pages[lastIdx] = withMark;
+      } else {
+        pages.push(END_MARK_HTML);
+        pageOffsets.push(pageOffsets[lastIdx] + 1);
+      }
+    }
+  }
+
+  function renderPages(keepOffset){
+    track.innerHTML = '';
+    dotsWrap.innerHTML = '';
+    pages.forEach(function(html){
+      var leaf = document.createElement('div');
+      leaf.className = 'leaf';
+      var inner = document.createElement('div');
+      inner.className = 'leaf-inner';
+      inner.innerHTML = html;
+      leaf.appendChild(inner);
+      track.appendChild(leaf);
+
+      var dot = document.createElement('div');
+      dot.className = 'dot';
+      dotsWrap.appendChild(dot);
+    });
+    totalPageEl.textContent = pages.length;
+
+    var target = 0;
+    if(typeof keepOffset === 'number'){
+      for(var i=0;i<pageOffsets.length;i++){
+        if(pageOffsets[i] <= keepOffset) target = i; else break;
+      }
+    }
+    goTo(target, false);
+  }
+
+  function leafWidth(){ return book.clientWidth; }
+
+  function saveProgress(){
+    try{
+      var offset = pageOffsets[index] || 0;
+      localStorage.setItem('progress:' + CHAPTER_FILE, offset);
+      localStorage.setItem('lastRead', JSON.stringify({file: CHAPTER_FILE, title: '第七章　臍輪（Nabhi Chakra）'}));
+    }catch(e){}
+  }
+
+  function updateGlobalBar(){
+    var localOffset = pageOffsets[index] || 0;
+    var pct = ((BASE_OFFSET + localOffset) / TOTAL_CHARS) * 100;
+    globalFill.style.width = Math.max(0, Math.min(100, pct)) + '%';
+  }
+
+  function goTo(i, animate){
+    index = Math.max(0, Math.min(pages.length - 1, i));
+    var w = leafWidth();
+    track.classList.toggle('no-anim', animate === false);
+    track.style.transform = 'translateX(' + (-index * w) + 'px)';
+    var dots = dotsWrap.children;
+    for(var n=0;n<dots.length;n++) dots[n].classList.toggle('active', n === index);
+    curPageEl.textContent = index + 1;
+    edgeLeft.classList.toggle('show', index > 0);
+    edgeRight.classList.toggle('show', index < pages.length - 1);
+    updateGlobalBar();
+    saveProgress();
+  }
+
+  function rebuild(){
+    var savedOffset = null;
+    try{
+      var raw = localStorage.getItem('progress:' + CHAPTER_FILE);
+      if(raw !== null) savedOffset = parseFloat(raw);
+    }catch(e){}
+    var keepOffset = savedOffset !== null ? savedOffset : (pageOffsets.length ? pageOffsets[index] : 0);
+    paginate();
+    renderPages(keepOffset);
+    loadingEl.style.display = 'none';
+  }
+
+  var resizeTimer = null;
+  window.addEventListener('resize', function(){
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(rebuild, 200);
+  });
+  window.addEventListener('orientationchange', function(){
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(rebuild, 250);
+  });
+
+  book.addEventListener('touchstart', function(e){
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    dragging = true;
+    track.classList.add('no-anim');
+  }, {passive:true});
+
+  book.addEventListener('touchmove', function(e){
+    if(!dragging) return;
+    var dx = e.touches[0].clientX - startX;
+    var dy = e.touches[0].clientY - startY;
+    if(Math.abs(dy) > Math.abs(dx)) return;
+    var w = leafWidth();
+    track.style.transform = 'translateX(' + (-index * w + dx) + 'px)';
+  }, {passive:true});
+
+  book.addEventListener('touchend', function(e){
+    if(!dragging) return;
+    dragging = false;
+    var dx = e.changedTouches[0].clientX - startX;
+    var w = leafWidth();
+    track.classList.remove('no-anim');
+    if(Math.abs(dx) > w * 0.18){
+      if(dx < 0){
+        if(index >= pages.length - 1 && NEXT_FILE){
+          window.location.href = NEXT_FILE;
+        } else {
+          goTo(index + 1);
+        }
+      } else {
+        if(index <= 0 && PREV_FILE){
+          window.location.href = PREV_FILE;
+        } else {
+          goTo(index - 1);
+        }
+      }
+    } else {
+      goTo(index);
+    }
+  });
+
+  edgeLeft.addEventListener('click', function(){
+    if(index <= 0 && PREV_FILE) window.location.href = PREV_FILE; else goTo(index - 1);
+  });
+  edgeRight.addEventListener('click', function(){
+    if(index >= pages.length - 1 && NEXT_FILE) window.location.href = NEXT_FILE; else goTo(index + 1);
+  });
+
+  document.addEventListener('keydown', function(e){
+    if(e.key === 'ArrowRight') edgeRight.click();
+    if(e.key === 'ArrowLeft') edgeLeft.click();
+  });
+
+  window.addEventListener('load', function(){ setTimeout(rebuild, 30); });
+  if(document.readyState === 'complete'){ setTimeout(rebuild, 30); }
+})();
+</script>
+
+</body>
+</html>

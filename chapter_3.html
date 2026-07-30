@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>第三章　陰脈、陽脈和中脈</title>
+<style>
+  :root{
+    --gold:#b8975f;
+    --soft:#f7f4ee;
+    --card:#fffdf9;
+    --muted:#9c9484;
+    --ink:#4a4238;
+    --scale:1;
+  }
+
+  :root.dark{
+    --gold:#d9c690;
+    --soft:#1b1613;
+    --card:#241d19;
+    --muted:#8a7d72;
+    --ink:#f1ece4;
+  }
+
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+
+  html,body{
+    margin:0;
+    padding:0;
+    height:100%;
+    background:var(--soft);
+    font-family:"Noto Serif TC","PMingLiU","Songti TC",serif;
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+    overflow:hidden;
+    transition:background 200ms ease, color 200ms ease;
+  }
+
+  .app{
+    position:relative;
+    height:100vh;
+    max-width:640px;
+    margin:0 auto;
+    display:flex;
+    flex-direction:column;
+  }
+
+  .globalbar{
+    flex:0 0 auto;
+    height:2px;
+    background:rgba(0,0,0,0.06);
+  }
+  .globalbar-fill{
+    height:100%;
+    background:var(--gold);
+    width:0%;
+    transition:width 300ms ease;
+  }
+
+  .topbar{
+    flex:0 0 auto;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:6px;
+    padding:14px 14px 8px;
+    z-index:20;
+  }
+
+  .iconbtn{
+    background:none;
+    border:none;
+    color:var(--muted);
+    font-size:17px;
+    line-height:1;
+    padding:6px 8px;
+    cursor:pointer;
+    flex:0 0 auto;
+  }
+
+  .topbar .title{
+    flex:1 1 auto;
+    text-align:center;
+    font-size:12px;
+    letter-spacing:0.2em;
+    color:var(--gold);
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+
+  .topbar .counter{
+    flex:0 0 auto;
+    font-size:11px;
+    letter-spacing:0.05em;
+    color:var(--muted);
+    padding:0 2px;
+  }
+
+  .book{
+    position:relative;
+    flex:1 1 auto;
+    overflow:hidden;
+  }
+
+  .track{
+    position:absolute;
+    top:0; left:0;
+    height:100%;
+    display:flex;
+    transition:transform 380ms cubic-bezier(.22,.61,.36,1);
+    will-change:transform;
+  }
+  .track.no-anim{ transition:none; }
+
+  .leaf{
+    flex:0 0 100vw;
+    max-width:640px;
+    height:100%;
+    padding:8px 26px 20px;
+    overflow:hidden;
+  }
+
+  .leaf-inner{ display:block; }
+
+  .chapter-head{ text-align:center; margin-bottom:30px; }
+  .chapter-head .eyebrow{ font-size:11px; letter-spacing:0.32em; color:var(--gold); margin-bottom:8px; }
+  .chapter-head h1{ font-size:24px; font-weight:600; letter-spacing:0.14em; margin:0 0 8px; }
+  .chapter-head .divider{ color:var(--gold); font-size:14px; letter-spacing:0.4em; margin-top:14px; }
+
+  .leaf-inner p{
+    font-size:calc(16.5px * var(--scale));
+    line-height:1.98;
+    letter-spacing:0.02em;
+    margin:0 0 22px;
+    text-indent:2em;
+  }
+  .leaf-inner p:last-child{ margin-bottom:0; }
+  .leaf-inner p.continued{ text-indent:0; }
+
+  .leaf-foot{ text-align:center; margin-top:10px; font-size:13px; color:var(--gold); letter-spacing:0.15em; }
+
+  .dots{
+    flex:0 0 auto;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    gap:9px;
+    padding:12px 0 14px;
+    z-index:20;
+    flex-wrap:wrap;
+  }
+
+  .dot{ width:6px; height:6px; border-radius:50%; background:var(--muted); opacity:0.35; transition:all 260ms ease; }
+  .dot.active{ opacity:1; background:var(--gold); width:16px; border-radius:3px; }
+
+  .edge{
+    position:absolute; top:0; height:100%; width:34px; z-index:15;
+    display:flex; align-items:center; justify-content:center;
+    color:var(--muted); font-size:15px; opacity:0;
+    transition:opacity 200ms ease; pointer-events:none;
+  }
+  .edge.show{ opacity:0.5; }
+  .edge.left{ left:0; }
+  .edge.right{ right:0; }
+
+  .loading{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    color:var(--muted); font-size:13px; letter-spacing:0.2em;
+  }
+
+  .booknav{
+    flex:0 0 auto;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    padding:10px 20px 16px;
+    border-top:1px solid rgba(0,0,0,0.06);
+    z-index:20;
+  }
+  .booknav a, .booknav span{ font-size:12px; letter-spacing:0.08em; color:var(--muted); text-decoration:none; padding:6px 4px; }
+  .booknav a{ color:var(--ink); }
+  .booknav .home{ color:var(--gold); letter-spacing:0.2em; }
+  .booknav .disabled{ color:var(--muted); opacity:0.4; pointer-events:none; }
+
+  .overlay{
+    position:fixed; inset:0; z-index:100;
+    background:rgba(0,0,0,0.45);
+    display:none;
+    align-items:flex-end;
+  }
+  .overlay.show{ display:flex; }
+
+  .sheet{
+    background:var(--card);
+    width:100%;
+    max-width:640px;
+    margin:0 auto;
+    max-height:78vh;
+    border-radius:20px 20px 0 0;
+    padding:18px 0 max(18px, env(safe-area-inset-bottom));
+    display:flex;
+    flex-direction:column;
+  }
+
+  .sheet-head{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:0 20px 14px;
+    font-size:12px; letter-spacing:0.2em; color:var(--gold);
+  }
+  .sheet-head button{
+    background:none; border:none; color:var(--muted); font-size:18px; padding:4px 8px; cursor:pointer;
+  }
+
+  .sheet-list{ overflow-y:auto; padding:0 8px; }
+  .sheet-item{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:13px 12px;
+    text-decoration:none;
+    color:var(--ink);
+    border-bottom:1px solid rgba(0,0,0,0.06);
+    font-size:14.5px;
+  }
+  .sheet-item.current{ color:var(--gold); }
+  .sheet-item:last-child{ border-bottom:none; }
+  .sheet-item .n{ color:var(--gold); font-size:11px; width:28px; flex:0 0 auto; }
+  .sheet-item .t{ flex:1 1 auto; padding:0 6px; }
+
+  .settings-body{ padding:6px 20px 10px; }
+  .setting-row{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 0;
+    border-bottom:1px solid rgba(0,0,0,0.06);
+  }
+  .setting-row:last-child{ border-bottom:none; }
+  .setting-label{ font-size:13px; color:var(--muted); letter-spacing:0.08em; }
+  .setting-controls{ display:flex; align-items:center; gap:10px; }
+  .pillbtn{
+    background:none;
+    border:1px solid var(--muted);
+    color:var(--ink);
+    width:32px; height:32px;
+    border-radius:50%;
+    font-size:14px;
+    cursor:pointer;
+  }
+  .theme-toggle{
+    display:flex; border:1px solid var(--muted); border-radius:16px; overflow:hidden;
+  }
+  .theme-toggle button{
+    background:none; border:none; color:var(--muted); font-size:14px; padding:6px 14px; cursor:pointer;
+  }
+  .theme-toggle button.active{ background:var(--gold); color:var(--card); }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <div class="globalbar"><div class="globalbar-fill" id="globalFill"></div></div>
+
+  <div class="topbar">
+    <button class="iconbtn" id="menuBtn" aria-label="目錄">☰</button>
+    <span class="title">第三章　陰脈、陽脈和中脈</span>
+    <span class="counter"><span id="curPage">1</span>/<span id="totalPage">…</span></span>
+    <button class="iconbtn" id="settingsBtn" aria-label="設定">⚙</button>
+  </div>
+
+  <div class="book" id="book">
+    <div class="edge left" id="edgeLeft">‹</div>
+    <div class="edge right" id="edgeRight">›</div>
+    <div class="loading" id="loading">排版中 ◇</div>
+    <div class="track no-anim" id="track"></div>
+  </div>
+
+  <div class="dots" id="dots"></div>
+
+  <div class="booknav">
+    <a href="chapter_2.html">‹ 上一頁</a>
+    <a class="home" href="index.html">回首頁</a>
+    <a href="chapter_4.html">下一頁 ›</a>
+  </div>
+
+</div>
+
+<div class="overlay" id="tocOverlay">
+  <div class="sheet">
+    <div class="sheet-head">
+      <span>目　錄</span>
+      <button id="tocClose">✕</button>
+    </div>
+    <div class="sheet-list" id="tocList"></div>
+  </div>
+</div>
+
+<div class="overlay" id="settingsOverlay">
+  <div class="sheet">
+    <div class="sheet-head">
+      <span>設　定</span>
+      <button id="settingsClose">✕</button>
+    </div>
+    <div class="settings-body">
+      <div class="setting-row">
+        <span class="setting-label">字級</span>
+        <div class="setting-controls">
+          <button class="pillbtn" id="fontMinus">A-</button>
+          <button class="pillbtn" id="fontPlus">A+</button>
+        </div>
+      </div>
+      <div class="setting-row">
+        <span class="setting-label">模式</span>
+        <div class="theme-toggle">
+          <button id="themeLight">☼ 日</button>
+          <button id="themeDark">☾ 夜</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="measure" class="leaf" style="position:fixed; top:0; left:-9999px; visibility:hidden; height:auto; overflow:visible;">
+  <div class="leaf-inner" id="measureInner"></div>
+</div>
+
+<script>
+(function(){
+
+  var CHAPTER_FILE = "chapter_3.html";
+  var BASE_OFFSET = 2802;
+  var TOTAL_CHARS = 41770;
+  var PREV_FILE = "chapter_2.html";
+  var NEXT_FILE = "chapter_4.html";
+  var CHAPTER_LIST = [{"num": "01", "title": "求道者", "file": "chapter_1.html"}, {"num": "02", "title": "靈量（Kundalini）", "file": "chapter_2.html"}, {"num": "03", "title": "陰脈、陽脈和中脈", "file": "chapter_3.html"}, {"num": "04", "title": "人體小宇宙", "file": "chapter_4.html"}, {"num": "05", "title": "根輪（Mooladhara Chakra）", "file": "chapter_5.html"}, {"num": "06", "title": "腹輪（Swadisthan Chakra）", "file": "chapter_6.html"}, {"num": "07", "title": "臍輪（Nabhi Chakra）", "file": "chapter_7.html"}, {"num": "08", "title": "集體意識", "file": "chapter_8.html"}, {"num": "09", "title": "十大宗師", "file": "chapter_9.html"}, {"num": "10", "title": "心輪（Heart Chakra）", "file": "chapter_10.html"}, {"num": "11", "title": "喉輪（Visshudhi Chakra）", "file": "chapter_11.html"}, {"num": "12", "title": "額輪（Agnya Chakra）", "file": "chapter_12.html"}, {"num": "13", "title": "頂輪（Sahasrara Chakra）", "file": "chapter_13.html"}, {"num": "14", "title": "神聖的生命能量", "file": "chapter_14.html"}, {"num": "15", "title": "靜坐冥想", "file": "chapter_15.html"}, {"num": "16", "title": "萬物之母", "file": "chapter_16.html"}, {"num": "17", "title": "後記", "file": "chapter_17.html"}];
+
+  var HEADER_HTML =
+    '<div class="chapter-head">'+
+      '<div class="eyebrow">THE THREE NADIS</div>'+
+      '<h1>第三章　陰脈、陽脈和中脈</h1>'+
+      '<div class="divider">❖</div>'+
+    '</div>';
+
+  var PARAGRAPHS = ["神是甚麼？無神論者說沒有神，有信仰的人會認定有神，儘管他還沒有見過神。誰是誰非呢？無神論者否認有神，他所根據的是甚麼呢？他曾作過靜坐冥想嗎？他曾花過時間作靈性的追求嗎？相反，那些相信有神的人卻能夠有所感應，並不是通過思維，而是從內在獲得感應。且看整個宇宙這樣和諧而有秩序，難道背後沒有甚麼原因，甚麼基本法則在支配其運作嗎？", "真理的追尋者雖仍未感應到神，但已在正確的道路上。對真理的追求是人類集體的事業。早期的科學家是如何嬋思竭慮，艱苦經營，才發現那些基本的定理，讓今人享受到科技的成果呢？科學不是個人的事業，而是建築在前人基礎之上的，牛頓發現萬有引力，然後愛因斯坦發明相對論，一代接一代，後人憑藉前人的成果，提出新的假設，作新的實驗，發明新的東西。這是歷史上集體力量可以幫助個人的一個例子。", "歷史上，沒有任何一個時間是人類創造的終點。所謂逝者如斯，不捨晝夜。如果一部簡單的機器背後已包含許許多多思維的努力，我們的身體又如何呢？我們身體的功能這樣多，沒有一個自覺力量的支持，生命體又如何進化到現在這個模樣呢？在這一切之背後，必有一個更高的自覺力量存在。錫呂．瑪塔吉女士說：「我們見樹而可想見其根。」", "我們必須謙卑地承認，我們對於支持生命的這個力量一無所知，因為這個力量之存在遠先於我們。我們如何知道千萬年前，亞當夏娃時代的事呢？這個知識，我們在學校裡可能學得一鱗半爪，但一點零碎的知識不足以引致結論。於是不同的人有不同的看法，互相攻訐。對於主宰生命的力量，我們無從規限，亦無法賦予一個固定的名字。我們只好稱祂為「自覺原理」、「X」、或「至高無上者」。", "現在我們且假設那個「自覺原理」便是萬有之源，同時我們必須恢復與祂的聯繫。我們不可須臾離開祂，要常活在祂之中，如魚水之兩忘。如何達到這種相忘乎江湖的自覺境界便是霎哈嘉瑜伽所要教授的。我們現在且假設那個最高「自覺原理」是個有著不同強度、不同情態、不同功能的力量。「自覺原理」首先需要一種欲望。", "如果一個科學家沒有欲望，他便不會發明些甚麼。同樣，如果我們沒有欲望，也不會去做甚麼。欲望是一切背後的原動力。佛陀說，欲望是一切痛苦的因由。佛陀所說的欲望和我們這裡所說的欲望不同。佛陀說的欲望是指低層次的欲望，是對有限事物的欲望，這種盲目的欲望常常伴隨著痛苦。但我們亦可以有希求得到覺醒的欲望。已實現自覺的人不是要以大悲心普渡眾生嗎？同樣，我們對神的愛也可有欲望。當「自覺原理」，即神產生欲望時，祂的力量便表現出來，表現為不同的形式和狀態，形成了整個宇宙。錫呂．瑪塔吉女士說：在人類身體的能量區左邊，有一個欲望的力量，叫月亮脈（Ida Nadi）或陰脈。此脈流經人身的左半邊，把過去的記憶融入意識之中，幫助人們作出行動。當陰脈保持活躍時，人便仍有生存的欲望，當陰脈退回，人便死亡。此脈亦掌管情感，並在右腦位置形成超我（Superego）。以現代的用語，它相當於人的心理（Psyche）。", "另方面，要實現欲望，必憑藉一股力量，這股掌管行動的力量在人體右邊，叫太陽脈（Pingala Nadi）或陽脈。陽脈供應行動的力量。要行動，我們要使用身體，還要認知思考，計劃將來的事情。陽脈便是負責身體活動和思維的，它在左腦形成一個副產品，叫自我（Eg。）。在醫學上，左右兩脈表現為位於脊柱外面的交感神經系統（Sympathetic Nervous System）°", "當這股力量實現了它的欲望後，還要保持獲得的成果。如果我們建成了一間房子，郤不能保有它，那便沒有意思了。這股力量是自覺的，以智慧為支持。由此便形成了第三脈，即掌管持續和進化的中脈（Sushumna Nadi）。通過智慧，這個力量便昇起，恢復與大有根源的聯繫。中脈在人體內表現為副交感神經系統（Parasympathetic Nervous System）。", "能量系統的能力要在我們得到自覺以後才能實現。追求人生意義的欲望還是不完全的，這個還未實現的欲望表現為潛藏在體內的靈量。", "當人作出行動時，由於無知，他認為行動者是他自己，其實他作的都只是關乎死物的事情，一切關乎生物的事情都是由大自然所作。然而人們錯誤的假定助長了他們的自我，使它膨脹如同一氣球。過度的行動亦會使自我膨脹，直到腦腔滿溢為止。這時，過度膨脹的自我對右邊的超我造成壓力，並使左脈負荷過重。", "這時，那個人便失去了感應能力，他變得孜孜為利，斤斤計較，愛駕御他人。他的性格是乾巴巴的、狡猾和愛侵略，這個人被自我蒙蔽，很易作出荒謬和愚蠢的事。", "陰脈如果疲弱的話，會造成極端的情緒化。那個人會喜怒無常，時起時伏。傾向於左邊的人是非常易受約制的。他們的性格懶惰，消極和內向。當左邊受的壓力太大時，會產生神經錯亂和癡呆。過度情緒化的人失去平衡，因此助長了右腦那個叫超我（Superego）的力量。超我是反作用於自我的，當它膨脹起來的時候，會把自我壓向另一邊，好像要從陽脈中找到一條出路一樣。同樣，任何一邊過度活躍都會使人像鐘擺一樣，從一邊擺向另一邊。經常搖搖擺擺於兩脈之間會使人失去平衡，對兩脈即交感神經系統造成壓力。", "陽脈掌管男性和陽剛的活動，如分析、競爭、侵略等。陰脈代表女性和陰柔的品質，如柔順、負責、合作、直覺等。哈達瑜伽（Hatha Yoga）由Ha和Tha兩字組成，意即日與月，或陽與陰。練習這種瑜伽，可以控制交感神經（左右脈）的活動，即可以增強或完全停止交感神經系統活動一段短時間，同時可能得到副交感神經系統（中脈）的各種低層次的表現，但卻從沒啓動過副交感神經。副交感神經系統才是真正的瑜伽，才是真正與上天神聖力量聯合的通道。哈達瑜伽即使能控制左右兩脈，但過分的條件制約，卻不利於生命的昇進。", "交感神經與副交感神經都使用中樞神經系統，霎哈嘉瑜伽指出，人體之中有七個潛在的能量中心。能量通過這些中心，經由大腦細胞，傳入兩個交感神經系統，然後傳導到中樞神經系統。腦細胞的纖維亦因此得到能量，產生智慧。否則大腦如何懂得作加減乘除呢？如何自己作新陳代謝呢？大腦是通過兩個交感神經系統產生智慧的。", "每個細胞都是一個生命體，每個生命體都是通過基因產生意識的。因為它們有意識，才叫生命體，否則我們便叫它們為死物。當生命體與意識之間的關係中斷了，那個生命體便算是死了。當人體中任何一脈負荷過重時，那條脈便會受到傷害，並減低了敏感度，導致中樞神經系統無法接收由交感神經和副交感神經傳來的信號。這好像電話線受到干擾，腦細胞及腦纖維無法正常運作，這時便會產生各種各樣心理方面的疾病。身體任何一部分過度活躍亦會導致不平衡。不平衡的狀態會使某些能量中心的能量衰竭，造成癌症等疾病。身體衰弱是由於從大化之源吸收的生命能量逐漸減少的緣故。人類的極端傾向使他們離棄了自然的律法。生命能量只有在人能夠達致中和，保持平衡時才得以流通。當人不順應自然之道，便阻塞了生命能量的流通，導致滅亡。", "左腦和右腦負責相反但卻相成的功能。左腦掌管身體的右邊，負責線性思維、計劃、分析等。右腦掌管身體的左邊，負責情感、記憶、欲望等。左腦能使人超越思想積集，轉化自我，向上昇進。言語能力表現在學習和成長的過程之中。左腦可以幫助我們產生創意，新的行為模式和想法。然後我們通過抽象思維，語言符號，繪畫或其他藝術形式，把意念表達出來。然而，藝術的發展必須要與副交感神經連繫才見精彩，若果一個藝術家以交感神經來創作，他的作品便會顯得線性，局限於潛意識（Sub-Conscious）或超意識（Supra-Conscious）的表現。", "但當這個藝術家通過副交感神經系統來創作時，他的作品便洋溢著自然的、生生不息的創造力。"];
+  var END_MARK_HTML = '<div class="leaf-foot">◇</div>';
+
+  var track = document.getElementById('track');
+  var book = document.getElementById('book');
+  var dotsWrap = document.getElementById('dots');
+  var curPageEl = document.getElementById('curPage');
+  var totalPageEl = document.getElementById('totalPage');
+  var edgeLeft = document.getElementById('edgeLeft');
+  var edgeRight = document.getElementById('edgeRight');
+  var loadingEl = document.getElementById('loading');
+  var measureInner = document.getElementById('measureInner');
+  var measureOuter = document.getElementById('measure');
+  var globalFill = document.getElementById('globalFill');
+
+  var index = 0;
+  var pages = [];
+  var pageOffsets = [];
+  var dragging = false, startX = 0, startY = 0;
+
+  // ---------- theme ----------
+  function applyTheme(t){
+    document.documentElement.classList.toggle('dark', t === 'dark');
+    document.getElementById('themeLight').classList.toggle('active', t !== 'dark');
+    document.getElementById('themeDark').classList.toggle('active', t === 'dark');
+  }
+  var savedTheme = localStorage.getItem('theme') || 'light';
+  applyTheme(savedTheme);
+  document.getElementById('themeLight').addEventListener('click', function(){
+    localStorage.setItem('theme','light'); applyTheme('light');
+  });
+  document.getElementById('themeDark').addEventListener('click', function(){
+    localStorage.setItem('theme','dark'); applyTheme('dark');
+  });
+
+  // ---------- font scale ----------
+  var savedScale = parseFloat(localStorage.getItem('fontScale') || '1');
+  document.documentElement.style.setProperty('--scale', savedScale);
+  function changeScale(delta){
+    savedScale = Math.max(0.8, Math.min(1.4, Math.round((savedScale + delta) * 100) / 100));
+    document.documentElement.style.setProperty('--scale', savedScale);
+    localStorage.setItem('fontScale', savedScale);
+    rebuild();
+  }
+  document.getElementById('fontMinus').addEventListener('click', function(){ changeScale(-0.1); });
+  document.getElementById('fontPlus').addEventListener('click', function(){ changeScale(0.1); });
+
+  // ---------- overlays ----------
+  var tocOverlay = document.getElementById('tocOverlay');
+  var settingsOverlay = document.getElementById('settingsOverlay');
+  var tocList = document.getElementById('tocList');
+
+  CHAPTER_LIST.forEach(function(ch){
+    var a = document.createElement('a');
+    a.href = ch.file;
+    a.className = 'sheet-item' + (ch.file === CHAPTER_FILE ? ' current' : '');
+    a.innerHTML = '<span class="n">'+ch.num+'</span><span class="t">'+ch.title+'</span>';
+    tocList.appendChild(a);
+  });
+
+  document.getElementById('menuBtn').addEventListener('click', function(){ tocOverlay.classList.add('show'); });
+  document.getElementById('tocClose').addEventListener('click', function(){ tocOverlay.classList.remove('show'); });
+  tocOverlay.addEventListener('click', function(e){ if(e.target === tocOverlay) tocOverlay.classList.remove('show'); });
+
+  document.getElementById('settingsBtn').addEventListener('click', function(){ settingsOverlay.classList.add('show'); });
+  document.getElementById('settingsClose').addEventListener('click', function(){ settingsOverlay.classList.remove('show'); });
+  settingsOverlay.addEventListener('click', function(e){ if(e.target === settingsOverlay) settingsOverlay.classList.remove('show'); });
+
+  // ---------- pagination ----------
+  function wrapPara(text, indent){
+    return '<p' + (indent ? '' : ' class="continued"') + '>' + text + '</p>';
+  }
+
+  function measure(html){
+    measureInner.innerHTML = html;
+    return measureOuter.getBoundingClientRect().height;
+  }
+
+  function maxFit(pageHTML, remaining, indent, limit){
+    var lo = 0, hi = remaining.length, best = 0;
+    while(lo <= hi){
+      var mid = (lo + hi) >> 1;
+      var h = measure(pageHTML + wrapPara(remaining.slice(0, mid), indent));
+      if(h <= limit){ best = mid; lo = mid + 1; } else { hi = mid - 1; }
+    }
+    return best;
+  }
+
+  function globalOffset(paraIdx, charIdx){
+    var off = 0;
+    for(var i=0;i<paraIdx;i++) off += PARAGRAPHS[i].length;
+    return off + charIdx;
+  }
+
+  function paginate(){
+    var leafW = book.clientWidth;
+    measureOuter.style.width = Math.min(leafW, 640) + 'px';
+    measureOuter.style.padding = getComputedStyle(document.querySelector('.leaf') || measureOuter).padding;
+
+    var probe = document.createElement('div');
+    probe.className = 'leaf';
+    probe.style.cssText = 'position:fixed; top:0; left:-9999px; visibility:hidden; width:' + Math.min(leafW,640) + 'px;';
+    probe.style.height = book.clientHeight + 'px';
+    document.body.appendChild(probe);
+    var cs = getComputedStyle(probe);
+    var padTop = parseFloat(cs.paddingTop), padBot = parseFloat(cs.paddingBottom);
+    document.body.removeChild(probe);
+    var availableHeight = book.clientHeight - padTop - padBot;
+
+    pages = [];
+    pageOffsets = [];
+
+    var paraIdx = 0, charIdx = 0;
+    var firstPage = true;
+
+    while(paraIdx < PARAGRAPHS.length){
+      var pageHTML = firstPage ? HEADER_HTML : '';
+      var startOffset = globalOffset(paraIdx, charIdx);
+      var brokeMidPage = false;
+
+      while(paraIdx < PARAGRAPHS.length){
+        var text = PARAGRAPHS[paraIdx];
+        var remaining = text.slice(charIdx);
+        var indent = (charIdx === 0);
+        var candidate = pageHTML + wrapPara(remaining, indent);
+
+        if(measure(candidate) <= availableHeight){
+          pageHTML = candidate;
+          paraIdx++; charIdx = 0;
+          continue;
+        } else {
+          var k = maxFit(pageHTML, remaining, indent, availableHeight);
+          if(k > 0){
+            pageHTML = pageHTML + wrapPara(remaining.slice(0, k), indent);
+            charIdx += k;
+          } else if(pageHTML === (firstPage ? HEADER_HTML : '')){
+            k = Math.max(1, maxFit('', remaining, indent, availableHeight));
+            pageHTML = pageHTML + wrapPara(remaining.slice(0, k), indent);
+            charIdx += k;
+          }
+          brokeMidPage = true;
+          break;
+        }
+      }
+
+      pages.push(pageHTML);
+      pageOffsets.push(startOffset);
+      firstPage = false;
+      if(!brokeMidPage) break;
+    }
+
+    if(pages.length){
+      var lastIdx = pages.length - 1;
+      var withMark = pages[lastIdx] + END_MARK_HTML;
+      if(measure(withMark) <= availableHeight){
+        pages[lastIdx] = withMark;
+      } else {
+        pages.push(END_MARK_HTML);
+        pageOffsets.push(pageOffsets[lastIdx] + 1);
+      }
+    }
+  }
+
+  function renderPages(keepOffset){
+    track.innerHTML = '';
+    dotsWrap.innerHTML = '';
+    pages.forEach(function(html){
+      var leaf = document.createElement('div');
+      leaf.className = 'leaf';
+      var inner = document.createElement('div');
+      inner.className = 'leaf-inner';
+      inner.innerHTML = html;
+      leaf.appendChild(inner);
+      track.appendChild(leaf);
+
+      var dot = document.createElement('div');
+      dot.className = 'dot';
+      dotsWrap.appendChild(dot);
+    });
+    totalPageEl.textContent = pages.length;
+
+    var target = 0;
+    if(typeof keepOffset === 'number'){
+      for(var i=0;i<pageOffsets.length;i++){
+        if(pageOffsets[i] <= keepOffset) target = i; else break;
+      }
+    }
+    goTo(target, false);
+  }
+
+  function leafWidth(){ return book.clientWidth; }
+
+  function saveProgress(){
+    try{
+      var offset = pageOffsets[index] || 0;
+      localStorage.setItem('progress:' + CHAPTER_FILE, offset);
+      localStorage.setItem('lastRead', JSON.stringify({file: CHAPTER_FILE, title: '第三章　陰脈、陽脈和中脈'}));
+    }catch(e){}
+  }
+
+  function updateGlobalBar(){
+    var localOffset = pageOffsets[index] || 0;
+    var pct = ((BASE_OFFSET + localOffset) / TOTAL_CHARS) * 100;
+    globalFill.style.width = Math.max(0, Math.min(100, pct)) + '%';
+  }
+
+  function goTo(i, animate){
+    index = Math.max(0, Math.min(pages.length - 1, i));
+    var w = leafWidth();
+    track.classList.toggle('no-anim', animate === false);
+    track.style.transform = 'translateX(' + (-index * w) + 'px)';
+    var dots = dotsWrap.children;
+    for(var n=0;n<dots.length;n++) dots[n].classList.toggle('active', n === index);
+    curPageEl.textContent = index + 1;
+    edgeLeft.classList.toggle('show', index > 0);
+    edgeRight.classList.toggle('show', index < pages.length - 1);
+    updateGlobalBar();
+    saveProgress();
+  }
+
+  function rebuild(){
+    var savedOffset = null;
+    try{
+      var raw = localStorage.getItem('progress:' + CHAPTER_FILE);
+      if(raw !== null) savedOffset = parseFloat(raw);
+    }catch(e){}
+    var keepOffset = savedOffset !== null ? savedOffset : (pageOffsets.length ? pageOffsets[index] : 0);
+    paginate();
+    renderPages(keepOffset);
+    loadingEl.style.display = 'none';
+  }
+
+  var resizeTimer = null;
+  window.addEventListener('resize', function(){
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(rebuild, 200);
+  });
+  window.addEventListener('orientationchange', function(){
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(rebuild, 250);
+  });
+
+  book.addEventListener('touchstart', function(e){
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    dragging = true;
+    track.classList.add('no-anim');
+  }, {passive:true});
+
+  book.addEventListener('touchmove', function(e){
+    if(!dragging) return;
+    var dx = e.touches[0].clientX - startX;
+    var dy = e.touches[0].clientY - startY;
+    if(Math.abs(dy) > Math.abs(dx)) return;
+    var w = leafWidth();
+    track.style.transform = 'translateX(' + (-index * w + dx) + 'px)';
+  }, {passive:true});
+
+  book.addEventListener('touchend', function(e){
+    if(!dragging) return;
+    dragging = false;
+    var dx = e.changedTouches[0].clientX - startX;
+    var w = leafWidth();
+    track.classList.remove('no-anim');
+    if(Math.abs(dx) > w * 0.18){
+      if(dx < 0){
+        if(index >= pages.length - 1 && NEXT_FILE){
+          window.location.href = NEXT_FILE;
+        } else {
+          goTo(index + 1);
+        }
+      } else {
+        if(index <= 0 && PREV_FILE){
+          window.location.href = PREV_FILE;
+        } else {
+          goTo(index - 1);
+        }
+      }
+    } else {
+      goTo(index);
+    }
+  });
+
+  edgeLeft.addEventListener('click', function(){
+    if(index <= 0 && PREV_FILE) window.location.href = PREV_FILE; else goTo(index - 1);
+  });
+  edgeRight.addEventListener('click', function(){
+    if(index >= pages.length - 1 && NEXT_FILE) window.location.href = NEXT_FILE; else goTo(index + 1);
+  });
+
+  document.addEventListener('keydown', function(e){
+    if(e.key === 'ArrowRight') edgeRight.click();
+    if(e.key === 'ArrowLeft') edgeLeft.click();
+  });
+
+  window.addEventListener('load', function(){ setTimeout(rebuild, 30); });
+  if(document.readyState === 'complete'){ setTimeout(rebuild, 30); }
+})();
+</script>
+
+</body>
+</html>
