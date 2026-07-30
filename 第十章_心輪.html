@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>第十章　心輪（Heart Chakra）</title>
+<style>
+  :root{
+    --gold:#b8975f;
+    --soft:#f7f4ee;
+    --card:#fffdf9;
+    --muted:#9c9484;
+    --ink:#4a4238;
+  }
+
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+
+  html,body{
+    margin:0;
+    padding:0;
+    height:100%;
+    background:var(--soft);
+    font-family:"Noto Serif TC","PMingLiU","Songti TC",serif;
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+    overflow:hidden;
+  }
+
+  .app{
+    position:relative;
+    height:100vh;
+    max-width:640px;
+    margin:0 auto;
+    display:flex;
+    flex-direction:column;
+  }
+
+  .topbar{
+    flex:0 0 auto;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:16px 20px 8px;
+    z-index:20;
+  }
+
+  .topbar .title{
+    font-size:13px;
+    letter-spacing:0.28em;
+    color:var(--gold);
+  }
+
+  .topbar .counter{
+    font-size:12px;
+    letter-spacing:0.1em;
+    color:var(--muted);
+  }
+
+  .book{
+    position:relative;
+    flex:1 1 auto;
+    overflow:hidden;
+  }
+
+  .track{
+    position:absolute;
+    top:0; left:0;
+    height:100%;
+    display:flex;
+    transition:transform 380ms cubic-bezier(.22,.61,.36,1);
+    will-change:transform;
+  }
+  .track.no-anim{ transition:none; }
+
+  .leaf{
+    flex:0 0 100vw;
+    max-width:640px;
+    height:100%;
+    padding:8px 26px 20px;
+    overflow:hidden;
+  }
+
+  .leaf-inner{
+    display:block;
+  }
+
+  .chapter-head{
+    text-align:center;
+    margin-bottom:30px;
+  }
+
+  .chapter-head .eyebrow{
+    font-size:11px;
+    letter-spacing:0.32em;
+    color:var(--gold);
+    margin-bottom:8px;
+  }
+
+  .chapter-head h1{
+    font-size:24px;
+    font-weight:600;
+    letter-spacing:0.14em;
+    margin:0 0 8px;
+  }
+
+  .chapter-head .divider{
+    color:var(--gold);
+    font-size:14px;
+    letter-spacing:0.4em;
+    margin-top:14px;
+  }
+
+  .leaf-inner p{
+    font-size:16.5px;
+    line-height:1.98;
+    letter-spacing:0.02em;
+    margin:0 0 22px;
+    text-indent:2em;
+  }
+
+  .leaf-inner p:last-child{ margin-bottom:0; }
+  .leaf-inner p.continued{ text-indent:0; }
+
+  .leaf-foot{
+    text-align:center;
+    margin-top:10px;
+    font-size:13px;
+    color:var(--gold);
+    letter-spacing:0.15em;
+  }
+
+  .dots{
+    flex:0 0 auto;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    gap:9px;
+    padding:12px 0 20px;
+    z-index:20;
+    flex-wrap:wrap;
+  }
+
+  .dot{
+    width:6px;
+    height:6px;
+    border-radius:50%;
+    background:var(--muted);
+    opacity:0.35;
+    transition:all 260ms ease;
+  }
+
+  .dot.active{
+    opacity:1;
+    background:var(--gold);
+    width:16px;
+    border-radius:3px;
+  }
+
+  .edge{
+    position:absolute;
+    top:0;
+    height:100%;
+    width:34px;
+    z-index:15;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:var(--muted);
+    font-size:15px;
+    opacity:0;
+    transition:opacity 200ms ease;
+    pointer-events:none;
+  }
+
+  .edge.show{ opacity:0.5; }
+  .edge.left{ left:0; }
+  .edge.right{ right:0; }
+
+  .loading{
+    position:absolute;
+    inset:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:var(--muted);
+    font-size:13px;
+    letter-spacing:0.2em;
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <div class="topbar">
+    <span class="title">第十章　心輪（Heart Chakra）</span>
+    <span class="counter"><span id="curPage">1</span> / <span id="totalPage">…</span></span>
+  </div>
+
+  <div class="book" id="book">
+    <div class="edge left" id="edgeLeft">‹</div>
+    <div class="edge right" id="edgeRight">›</div>
+    <div class="loading" id="loading">排版中 ◇</div>
+    <div class="track no-anim" id="track"></div>
+  </div>
+
+  <div class="dots" id="dots"></div>
+
+</div>
+
+<div id="measure" class="leaf" style="position:fixed; top:0; left:-9999px; visibility:hidden; height:auto; overflow:visible;">
+  <div class="leaf-inner" id="measureInner"></div>
+</div>
+
+<script>
+(function(){
+
+  var HEADER_HTML =
+    '<div class="chapter-head">'+
+      '<div class="eyebrow">HEART CHAKRA</div>'+
+      '<h1>第十章　心輪（Heart Chakra）</h1>'+
+      '<div class="divider">❖</div>'+
+    '</div>';
+
+  var PARAGRAPHS = ["且讓友誼沒有意義，若非為了靈性加深的緣故。", "---紀伯倫（Kahlil Gibran）", "嬰兒出生時，首先會對母親的靈體作出反應。他尙未能知覺自己與母親的分別，但他卻能知覺靈體，他自己的靈體與母親的靈體。嬰兒從子宮出來時，會感到驚慌。他的第一反應是希望返回子宮，幸好他的靈體受到母親的靈體給予的慰藉，支持著他生活在一個疏離的環境。在這個時期，自我和超我還未發展出來，他是個純粹的靈體。他只對母親的靈體作出反應，那個反應便是無條件的愛。", "那不是由思想積集造成的反應，而全然是兩個靈體遇合的喜樂。", "真愛是由靈體而非身體或思維發出的。因此當你說愛一個人時，你要問自己是愛他或她的身體還是靈體。身體方面的吸引是生理性的，是由於性方面的吸引力，夢中情人的形象，對別人才智的欣賞，或畫家所作的形像的投射。身體的吸引不是真愛，因為那是由思維造成的。思維不會去愛，只會欲求。由於思想的積集，我們經常把其他東西誤認為是愛，例如佔有、性慾、自私自利等。於是愛的對象變成是滿足欲望的對象。真正的愛是超然的，不事佔有。", "當欲望得到滿足後，那種新奇感便沒有了。比方孩童會因為得到一個新玩具感到興奮，但過了幾天，那種新奇感和興奮便沒有了。建立在身體吸引上的關係會出現同樣的情況。而且那種吸引力可能來自社會制約、傳媒塑造出來的形象，甚至是自我欺騙。有些人懂得怎樣去挑引別人，那些中了外表圈套的人特別危險。在這種情況下，兩人的遇合不是由於靈體，而是身體的形狀。形狀是個概念，只是個幻象，不是真正的存在。幻象不能去愛或被愛。莎士比亞這樣說：「請說迷戀在那裡萌芽？在心底還是在腦海中？迷戀如何生長，如何受到滋養？告訴我，告訴我！", "迷戀由眼睛發亮開始，養育得過多，迷戀便會消逝，在它的搖籃之中。」", "——威尼斯商人第三幕（2）", "你所看見別人的形象只是你思想的投射。只有知道了自己的靈體，你才可以與他人的靈體建立關係。那種關係才是真正的愛，根深蒂固，帶來永恆的滿足和喜樂。", "許多古老文化的習俗都肯認人的靈體。例如在印度，當新郎到新娘家時，新娘會在門前相迎，禮拜新郎的靈體。因此他們視婚姻為靈性上的結合。沒有靈性的層次，婚姻只是個社會制度或者契約。後者只是種短暫的關係，或離或合，這種狀態令人失去安全感，對心輪造成不良影響。夫妻間互不信任，恐懼便會將二人分開。現今社會缺乏安全感的問題，不是由於金錢匱乏，而是由於情感的困擾。", "「跟我們談一談婚姻吧。", "他回答說：", "你們一塊出世，也要永遠合一。", "在死神的白羽隔絕你們的歲月時，你們也要合一。", "對了，連在靜默地憶想上帝之時，你們也要合一。", "不過在你們合一之中，要有空間。", "讓上天的風在你們之間舞蹈。」", "—紀伯倫《先知》", "只有通過心輪，我們才能經驗到真愛的喜樂。如果任何一方，無論是男方還是女方，宰制另一方，或佔有另一方，真愛便沒有了，他們的關係也會受到破壞。我們要讓靈體愛的能量自由流通，我們便要尊重對方，不以自己的意志妨礙對方的成長。互相了解加深，男女雙方都會知道他們地位平等。女性不喜歡受到宰制，她們在平等的關係中才能肯定自己。男人因為體力較佳，負責保護家庭，外出謀生。因為錢在他手，他便很容易感到高高在上。如果女性不能肯定自己的地位，她會感到挫折，並發展出抑壓的憤怒。那種怒氣通常都會發洩在兒童身上，許多時候帶來很壞的後果，經年累月，會造成神經病、乳癌和其他婦科疾病。這都是由於婦女受到壓迫，得不到公平的待遇所致。", "在人類進化的第四個階段，羅摩（Rama）降世，展示理想的夫婦關係。他還展示如何作一個仁民愛物的聖君，恢復了許多衰落了的社會價值。他以身示範聖王治世之道，和如何根據正法建立社會和政治的規範，以符合進化的律則。通過自己的自我犧牲和誠敬的生活方式，他展示了人們應如何生活，那些是良善的和尊貴的行為，這些行為使人能夠找到靈體，保護心靈，不受外來侵襲。人類有理性的能力，能保護自己喜樂的泉源和內在的感覺系統。不幸的是，許多時人用理性來對抗他們的心靈。", "羅摩強調子女對父母、父母對子女、妻子對丈夫、丈夫對妻子等等的責任。在他任國王期間，他認為智慧和高齡是同一物，所以，他常常聽問長者的意見。這對社會的整合和持續是必要的。因為，如果家庭解體，整個社會便會分崩離析。所以，維持整個社會的秩序，小至家庭，大至國家，都要受到尊重。一個社會要提供社會保障，若果老年人知道自己將要在老人院終老，那麼，不安全的感覺便油然而生了。錢是買不到安全感的。俗語說：老人變小孩，老人很需要愛和關懷。再者，老人的祝福是充滿喜樂的，所以，極端的個人主義只會導致孤獨。愛許多時被誤解為只存在於男女之間亠其實愛流通於所有部分：子女、父母、兄弟、姊妹、朋友、老人等中間。當人們彼此相愛，互相關心，整個社會的心輪便會打開，成為集體的愛，這種力量足以改變整個社會，這便是愛的力量。愛的確具有行動的力量。整個創造本身便是上天浩愛的見證。愛能產生自信。有自信的人能抵抗外來的惡性影響。恐懼只會不斷減弱我們的抵抗力，使我們容易患病。那些心輪強大的人會散發出光輝，在生活中成為不敗的戰士。相反，活在恐懼的深淵，我們的心只會不斷枯萎。心悸和胸部的疾病就是由於缺乏安全感所引起的。現代心理學把許多問題都歸咎於缺乏安全感，我們知道不安全的感覺其實是來自我們的自我。", "我們付出甚麼，就會吸引些甚麼回來。如果你的心輪受阻，你便會吸引到一些也是心輪受阻的伴侶和朋友回來，使到問題持續下去。因此，在建立一個關係之前，我們要使自己的心靈強壯，打好基礎。如果自小缺乏母愛，良好的夫婦關係可以彌補其不足。", "如果你的反應是打從心底發出的話，你便毫不計較別人的缺點，可以和別人一起分享，且樂於施與。一個母親會自然而然把一切都分給孩子，不感到受負累，那便是愛的呼召。愛是使家庭充滿生氣的力量來源，愛維繫著家庭、養育著家庭、支持著家庭。", "強大的心輪是健全人格的基礎。有愛的滋養，人就顯得和藹可親，充滿喜樂。愛之道貴乎自然，有了愛，——就如種子吸收土壤的養分一樣、發芽成長。一個醫生如果有愛心，他治療疾病的能力也會增強，即使只對病人噓寒問暖，病人也會感到舒適。有愛心的人能吸引周圍的人，好像蜜糖吸引蜜蜂一樣。愛使我們對人仁慈，不用思維，我們便會主動去幫助別人。這並不是人為的決定，而是自然而發的。有愛心的人能感受到別人的苦難，這是因為他對同類具有感通之情的緣故。錫呂．瑪塔吉女士經常說：「誰是他人？」「當有限的大腦在知道神以後便變成無限。如果你是太陽和陽光，是月亮和月光，那還何來二元對立？只有還存分別心，才有二元對立，有二元對立，才有執著才有自己和自己的財產等觀念，如果所有事物都是我，還有甚麼他者呢？當大腦失去對自己的認同，有限的大腦便變成無限的靈體了。」", "錫呂．瑪塔吉女士經常感到別人痛苦出現在她的身體上。她經常吸收別人的疾病和痛苦。許多次病人被帶到她面前，都感到病況好轉，而錫呂．瑪塔吉女士卻身受其苦。她微微一笑說：「不要緊，那只是一副皮囊。」而那個病人便被治好了。", "錫呂．瑪塔吉女士認為沒有愛的世界是個石器時代的世界，因為人心硬得像石頭一樣，麻木不仁。沒有愛心，任何計劃都會變得乾枯乏味，缺乏歡欣。無怪乎科技不斷進步，人類卻越覺煩悶，毫無喜樂。生產線和市場推銷技巧便是兩個例子。我們的社會及經濟領域也受到同樣的壓力。成功和侵略成為人類目前的普遍價值。學校變了大規模生產的工廠，向兒童灌輸大規模生產所需要的紀律，培養他們成為未來的行政人員、企業家、推銷員等等。他們鼓勵兒童去競爭，去爭取勝利，因為這個世界是屬於勝利者的。在這場競爭中，每個人都要想盡辦法擊倒其他人。那些所謂成功的日本商人有許多都因為患上心臟病而英年早逝。過度活躍和繁忙的生活會造成各種各樣精神上、情緒上和心理上的疾病。無論一個人在社會上多麼有地位，沒有愛，他只像失去芬芳香氣的花朵，全沒有吸引力。過度的右邊活動會使注意力轉移到思維層面。久而久之，注意力習慣停留在思維層面，便不能接受從心靈而來的喜樂。通常我們要有一點支持力，才能把注意力連接到喜樂的泉源。可是許多時，當注意力轉移的時候，往往從右邊走向左邊，不能停在中央的位置。在現代社會，許多人都有這種從一個極端走向另一個極端的毛病。", "只有當注意力移到中脈，我們才能解決行為走向極端的問題。在思維的層面，我們很難了解宇宙大我的存在，因為宇宙大我，或神是超過我們思維的層次的。在思維的層面，思想是平面直線發展的，必會迷失在自建的迷宮，產生各種各樣的問題。這些問題沒有真正的答案，因為問題本身不真實存在。心理治療醫生費九牛二虎之力解了一個思想的結，思維馬上又陷入另一些纏繞。但如果那人讓愛注入心輪，問題便會消失於無影無形。那些沉迷於思維的人已把心靈的大門緊閉，只有蠢‘量知道怎樣打開它。我們要相信靈量，靈量能使注意力一從右脈回到中脈，並打開心輪。於是靈量便能昇上頭頂部位，使人進入無思無慮的覺醒狀態。經過反覆不斷練習，注意力便會離開右脈，習慣性地停留在中脈。這時整體大我的能量便能穿透心輪，帶來滿足和喜樂。", "要保持平衡，我們必須在各社會團體和各種制度中，建立人類的真正價值。這樣不但個人能保持平衡，社會也能變得和諧、有創造力和能夠昇進；同時亦能促進社會經濟制度走向平衡，達至集體的福祉。轉變不是來自外在，而是來自核心家庭。例如企業家父親般的慈愛不但能改進生產，同時可滋養心輪右部，給他自己，他的家庭和整個社會帶來滿足。同樣的道理也可應用於宏觀的國家政策。如果決策者照顧到人類的價值，他們作的決定便會帶來平安、繁榮和昌盛。心輪強大會帶來富足。在愛的籠罩下，經濟指數也能自然而然地克服障礙。心輪有內在的能力，能應付逆境。這便是愛的力量。有此力量在，所有戰爭和侵略都會終止。如果一個國家造成正面的影響，便能影響整個世界。但心輪的工作並不是一蹴即就的，而是需要耐心和容忍。這些都不是用時間可以量度的。我們且記著：上天的浩愛可令一切事情皆得以成就。", "富人生活太忙碌，根本沒有時間享受。我們要問：一個人在積累大量財富以後，可以做什麼呢？許多時只是多喝兩杯，胡亂花費而已。但如果那個人有內在的平衡，他便能有效地利用金錢。靈性的力量可以穿透生活的每一部分，包括經濟、政治、藝術等等，這便是霎哈嘉瑜伽要研究的課題。神創造這個宇宙，不是要叫我們去侵略或去躲懶，而是去慶祝、去頌讚、去享受。所有美麗的藝術品都是遠古時代美的反映。人的身體是一切藝術品中最美好的。從人的身上可看見造物主的愛和榮耀。", "愛是所有被創造物、所有生命能量背後的原理，神就是愛，愛就是神。在真愛之中，無所謂你我，只有溶合。在溶合之中，我們才能體會到更深層次的人性。從身體表面上看，我們有不同的膚色、身材、樣貌、思想和頭腦。但在愛之中，個別的點滴成大海汪洋，生命能量依不同頻率跳動，造成不同的形狀，生生不息，形成宇宙之舞。可是，仇恨和嫉妒卻形成一股反流量，與宇宙之舞對抗。但有愛存在，便會有生長、有喜樂、有進化。我們毋須用強迫的方法去超越自我，許多人誤以為苦行便是潔淨其身，以為這些傷害自己的行為是對的。相反，順適人意的行為卻是不對的、會麻痺靈體。其實，自我否定與自我虐待都是違反靈體的，會傷害靈體的尊嚴。", "迦比爾（Kabir）說：「如果你不能轉向內在，轉那些念珠又有甚麼用？」", "心臟是身體的泵房，過度的精神或體力消耗，會使這個中心的能量流失，引致嚴重的心臟病。劇烈運動也會令心輪減弱，參加馬拉松賽跑可以證明些甚麼呢？得到冠軍又怎樣？同樣，現代的運動瑜伽只會傷害心輪，往昔的修行者發明一套運動方法，旨在糾正由於不良生活方式所引起的脊柱疾病，希望使身軀回復自然狀態而已，後來才發展成運動瑜伽。但一個健康的人，根本不需要做這種瑜伽。錫呂．瑪塔吉女士說：「就像吃藥一樣，我們斷不會將所有藥都吃下肚。」可是今天，特別是在西方，許多人誤以為運動瑜伽是提昇靈性的方法。他們花許多時間來練習那些姿勢。然而，即使他們把頭倒立在地，還是找不到神的。", "現在還有許多冠上瑜伽作為名稱的事物。例如辦公室瑜伽，叫人坐在椅上，向前彎或向後仰，他們需要獲得像玩具一樣具體的東西，以為向前彎多一點、或向後仰多一點，便是有進步。此猶如有些人以為身披黃袈裟，行素食，練習身體瑜伽，便可以達到神的境界，這統統都是誤解。衣服的顏色、食物的選擇、瑜伽的姿勢，所有這些都與神無關。只有通過靈量上昇，通過正確的生活方式，與及正確的行為和思想，才能達到神性的境界。", "迦比爾說：「如果赤裸身體便可以達到神，那麼森林裡的野獸早已找到神了。」", "如果我們把身體當作可以扭橫折曲的機器，我們就會變成機器。運動瑜伽只會令陽脈過分活躍，使人變得枯燥、冷漠、沒有愛心。在這極端的情況下，靈體更會感到不愉快，而想離開身體，此時，這個人便會有心臟病，最後甚至死亡。"];
+
+  var END_MARK_HTML = '<div class="leaf-foot">◇</div>';
+
+  var track = document.getElementById('track');
+  var book = document.getElementById('book');
+  var dotsWrap = document.getElementById('dots');
+  var curPageEl = document.getElementById('curPage');
+  var totalPageEl = document.getElementById('totalPage');
+  var edgeLeft = document.getElementById('edgeLeft');
+  var edgeRight = document.getElementById('edgeRight');
+  var loadingEl = document.getElementById('loading');
+  var measureInner = document.getElementById('measureInner');
+  var measureOuter = document.getElementById('measure');
+
+  var index = 0;
+  var pages = [];
+  var pageOffsets = [];
+  var dragging = false, startX = 0, startY = 0;
+
+  function wrapPara(text, indent){
+    return '<p' + (indent ? '' : ' class="continued"') + '>' + text + '</p>';
+  }
+
+  function measure(html){
+    measureInner.innerHTML = html;
+    return measureOuter.getBoundingClientRect().height;
+  }
+
+  function maxFit(pageHTML, remaining, indent, limit){
+    var lo = 0, hi = remaining.length, best = 0;
+    while(lo <= hi){
+      var mid = (lo + hi) >> 1;
+      var h = measure(pageHTML + wrapPara(remaining.slice(0, mid), indent));
+      if(h <= limit){ best = mid; lo = mid + 1; } else { hi = mid - 1; }
+    }
+    return best;
+  }
+
+  function globalOffset(paraIdx, charIdx){
+    var off = 0;
+    for(var i=0;i<paraIdx;i++) off += PARAGRAPHS[i].length;
+    return off + charIdx;
+  }
+
+  function paginate(){
+    var leafW = book.clientWidth;
+    measureOuter.style.width = Math.min(leafW, 640) + 'px';
+    measureOuter.style.padding = getComputedStyle(document.querySelector('.leaf') || measureOuter).padding;
+
+    var probe = document.createElement('div');
+    probe.className = 'leaf';
+    probe.style.cssText = 'position:fixed; top:0; left:-9999px; visibility:hidden; width:' + Math.min(leafW,640) + 'px;';
+    probe.style.height = book.clientHeight + 'px';
+    document.body.appendChild(probe);
+    var cs = getComputedStyle(probe);
+    var padTop = parseFloat(cs.paddingTop), padBot = parseFloat(cs.paddingBottom);
+    document.body.removeChild(probe);
+    var availableHeight = book.clientHeight - padTop - padBot;
+
+    pages = [];
+    pageOffsets = [];
+
+    var paraIdx = 0, charIdx = 0;
+    var firstPage = true;
+
+    while(paraIdx < PARAGRAPHS.length){
+      var pageHTML = firstPage ? HEADER_HTML : '';
+      var startOffset = globalOffset(paraIdx, charIdx);
+      var brokeMidPage = false;
+
+      while(paraIdx < PARAGRAPHS.length){
+        var text = PARAGRAPHS[paraIdx];
+        var remaining = text.slice(charIdx);
+        var indent = (charIdx === 0);
+        var candidate = pageHTML + wrapPara(remaining, indent);
+
+        if(measure(candidate) <= availableHeight){
+          pageHTML = candidate;
+          paraIdx++; charIdx = 0;
+          continue;
+        } else {
+          var k = maxFit(pageHTML, remaining, indent, availableHeight);
+          if(k > 0){
+            pageHTML = pageHTML + wrapPara(remaining.slice(0, k), indent);
+            charIdx += k;
+          } else if(pageHTML === (firstPage ? HEADER_HTML : '')){
+            k = Math.max(1, maxFit('', remaining, indent, availableHeight));
+            pageHTML = pageHTML + wrapPara(remaining.slice(0, k), indent);
+            charIdx += k;
+          }
+          brokeMidPage = true;
+          break;
+        }
+      }
+
+      pages.push(pageHTML);
+      pageOffsets.push(startOffset);
+      firstPage = false;
+      if(!brokeMidPage) break;
+    }
+
+    if(pages.length){
+      var lastIdx = pages.length - 1;
+      var withMark = pages[lastIdx] + END_MARK_HTML;
+      if(measure(withMark) <= availableHeight){
+        pages[lastIdx] = withMark;
+      } else {
+        pages.push(END_MARK_HTML);
+        pageOffsets.push(pageOffsets[lastIdx] + 1);
+      }
+    }
+  }
+
+  function renderPages(keepOffset){
+    track.innerHTML = '';
+    dotsWrap.innerHTML = '';
+    pages.forEach(function(html){
+      var leaf = document.createElement('div');
+      leaf.className = 'leaf';
+      var inner = document.createElement('div');
+      inner.className = 'leaf-inner';
+      inner.innerHTML = html;
+      leaf.appendChild(inner);
+      track.appendChild(leaf);
+
+      var dot = document.createElement('div');
+      dot.className = 'dot';
+      dotsWrap.appendChild(dot);
+    });
+    totalPageEl.textContent = pages.length;
+
+    var target = 0;
+    if(typeof keepOffset === 'number'){
+      for(var i=0;i<pageOffsets.length;i++){
+        if(pageOffsets[i] <= keepOffset) target = i; else break;
+      }
+    }
+    goTo(target, false);
+  }
+
+  function leafWidth(){ return book.clientWidth; }
+
+  function goTo(i, animate){
+    index = Math.max(0, Math.min(pages.length - 1, i));
+    var w = leafWidth();
+    track.classList.toggle('no-anim', animate === false);
+    track.style.transform = 'translateX(' + (-index * w) + 'px)';
+    var dots = dotsWrap.children;
+    for(var n=0;n<dots.length;n++) dots[n].classList.toggle('active', n === index);
+    curPageEl.textContent = index + 1;
+    edgeLeft.classList.toggle('show', index > 0);
+    edgeRight.classList.toggle('show', index < pages.length - 1);
+  }
+
+  function rebuild(){
+    var keepOffset = pageOffsets.length ? pageOffsets[index] : 0;
+    paginate();
+    renderPages(keepOffset);
+    loadingEl.style.display = 'none';
+  }
+
+  var resizeTimer = null;
+  window.addEventListener('resize', function(){
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(rebuild, 200);
+  });
+  window.addEventListener('orientationchange', function(){
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(rebuild, 250);
+  });
+
+  book.addEventListener('touchstart', function(e){
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    dragging = true;
+    track.classList.add('no-anim');
+  }, {passive:true});
+
+  book.addEventListener('touchmove', function(e){
+    if(!dragging) return;
+    var dx = e.touches[0].clientX - startX;
+    var dy = e.touches[0].clientY - startY;
+    if(Math.abs(dy) > Math.abs(dx)) return;
+    var w = leafWidth();
+    track.style.transform = 'translateX(' + (-index * w + dx) + 'px)';
+  }, {passive:true});
+
+  book.addEventListener('touchend', function(e){
+    if(!dragging) return;
+    dragging = false;
+    var dx = e.changedTouches[0].clientX - startX;
+    var w = leafWidth();
+    track.classList.remove('no-anim');
+    if(Math.abs(dx) > w * 0.18){
+      goTo(index + (dx < 0 ? 1 : -1));
+    } else {
+      goTo(index);
+    }
+  });
+
+  edgeLeft.addEventListener('click', function(){ goTo(index - 1); });
+  edgeRight.addEventListener('click', function(){ goTo(index + 1); });
+
+  document.addEventListener('keydown', function(e){
+    if(e.key === 'ArrowRight') goTo(index + 1);
+    if(e.key === 'ArrowLeft') goTo(index - 1);
+  });
+
+  window.addEventListener('load', function(){
+    setTimeout(rebuild, 30);
+  });
+  if(document.readyState === 'complete'){ setTimeout(rebuild, 30); }
+})();
+</script>
+
+</body>
+</html>
