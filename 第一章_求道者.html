@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>第一章　求道者</title>
+<style>
+  :root{
+    --gold:#b8975f;
+    --soft:#f7f4ee;
+    --card:#fffdf9;
+    --muted:#9c9484;
+    --ink:#4a4238;
+  }
+
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+
+  html,body{
+    margin:0;
+    padding:0;
+    height:100%;
+    background:var(--soft);
+    font-family:"Noto Serif TC","PMingLiU","Songti TC",serif;
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+    overflow:hidden;
+  }
+
+  .app{
+    position:relative;
+    height:100vh;
+    max-width:640px;
+    margin:0 auto;
+    display:flex;
+    flex-direction:column;
+  }
+
+  .topbar{
+    flex:0 0 auto;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:16px 20px 8px;
+    z-index:20;
+  }
+
+  .topbar .title{
+    font-size:13px;
+    letter-spacing:0.28em;
+    color:var(--gold);
+  }
+
+  .topbar .counter{
+    font-size:12px;
+    letter-spacing:0.1em;
+    color:var(--muted);
+  }
+
+  .book{
+    position:relative;
+    flex:1 1 auto;
+    overflow:hidden;
+  }
+
+  .track{
+    position:absolute;
+    top:0; left:0;
+    height:100%;
+    display:flex;
+    transition:transform 380ms cubic-bezier(.22,.61,.36,1);
+    will-change:transform;
+  }
+
+  .leaf{
+    flex:0 0 100vw;
+    max-width:640px;
+    height:100%;
+    padding:8px 26px 90px;
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+  }
+
+  .leaf-inner{
+    min-height:100%;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+  }
+
+  .chapter-head{
+    text-align:center;
+    margin-bottom:34px;
+  }
+
+  .chapter-head .eyebrow{
+    font-size:11px;
+    letter-spacing:0.32em;
+    color:var(--gold);
+    margin-bottom:8px;
+  }
+
+  .chapter-head h1{
+    font-size:24px;
+    font-weight:600;
+    letter-spacing:0.14em;
+    margin:0 0 8px;
+  }
+
+  .chapter-head .divider{
+    color:var(--gold);
+    font-size:14px;
+    letter-spacing:0.4em;
+    margin-top:14px;
+  }
+
+  p{
+    font-size:16.5px;
+    line-height:2.05;
+    letter-spacing:0.02em;
+    margin:0 0 24px;
+    text-indent:2em;
+  }
+
+  p:last-child{ margin-bottom:0; }
+
+  .leaf-foot{
+    text-align:center;
+    margin-top:34px;
+    font-size:12px;
+    color:var(--muted);
+    letter-spacing:0.15em;
+  }
+
+  .dots{
+    flex:0 0 auto;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    gap:9px;
+    padding:14px 0 22px;
+    z-index:20;
+  }
+
+  .dot{
+    width:6px;
+    height:6px;
+    border-radius:50%;
+    background:var(--muted);
+    opacity:0.35;
+    transition:all 260ms ease;
+  }
+
+  .dot.active{
+    opacity:1;
+    background:var(--gold);
+    width:16px;
+    border-radius:3px;
+  }
+
+  .edge{
+    position:absolute;
+    top:0;
+    height:100%;
+    width:34px;
+    z-index:15;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:var(--muted);
+    font-size:15px;
+    opacity:0;
+    transition:opacity 200ms ease;
+    pointer-events:none;
+  }
+
+  .edge.show{ opacity:0.5; }
+  .edge.left{ left:0; }
+  .edge.right{ right:0; }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <div class="topbar">
+    <span class="title">第一章　求道者</span>
+    <span class="counter"><span id="curPage">1</span> / <span id="totalPage">4</span></span>
+  </div>
+
+  <div class="book" id="book">
+    <div class="edge left" id="edgeLeft">‹</div>
+    <div class="edge right show" id="edgeRight">›</div>
+
+    <div class="track" id="track">
+
+      <div class="leaf">
+        <div class="leaf-inner">
+          <div class="chapter-head">
+            <div class="eyebrow">SEEKER</div>
+            <h1>第一章　求道者</h1>
+            <div class="divider">❖</div>
+          </div>
+
+          <p>每個部分都在追尋著全體，因為部分是由全體來的，它希望重返根源。</p>
+
+          <p>追求真理是人類的本性，但求道之心卻有深淺強弱之別。其淺者只是種好奇心理，不會導致進一步的行動，其深者有如佛陀對真我追求之鏤而不捨，九死不悔。追求真理的熱誠可以粗淺的形式來表現，如旅行家之深入蠻荒，科學家之尋根究底，也可表現為藝術家的敏銳直覺、好學者對學問的追求。甚至那些不自覺的追求者也是在尋找著，例如借助藥物的癮君子也是在追求著些甚麼，只不過他們仍然在黑暗之中，不知所求者為何物。</p>
+
+          <p>我們何時成為真理的追求者呢？是當有靈感來自內在的時候。在此之前，我們的問題都是外在的，就如小孩子問父母親甚麼是星星，甚麼是太陽，甚麼是月亮一樣。只有內在的靈感才使我們的問題轉變為內在的追求。我們開始發問：我是誰？我為甚麼活在此時此地？我跟別人有甚麼干連？人類的頭腦創造了許多概念。有些我們接受，並應用在生活之中，有些我們不接受，有些我們則去試驗它。由於科學實驗不能提供整全的答案，我們往往走入歧路，甚或死胡同。這種探索，所得者頂多只是思維的投射，又或者是社會的思想積集，這些都是來自我們的自我和超我。通常我們都是通過</p>
+        </div>
+      </div>
+
+      <div class="leaf">
+        <div class="leaf-inner">
+          <p>自我和超我消化外來的訊息，然後對不同的情況作出反應。如果我們能處於平衡、不偏不倚，並能以靜觀及不執著的態度處事，這種知覺狀態便有助於我們昇進。可是這很難做到，人們通常都會被腦筋的千思萬慮所纏繞，沉迷於議論不休。</p>
+
+          <p>在集體的層面，無論思維是通過代表過去的集體潛意識抑或是代表未來的集體超意識，都不會有助於人類的昇進。上述兩種思維方式都是在平面上直線爬行，走一步可能退兩步。人類的昇進像螺旋式向上的運動，它超越了集體潛意識和集體超意識，連接到集體無意識去。</p>
+
+          <p>通過自我和超我過濾的資料只會形成概念。概念不同於真實。可是自我和超我不是這樣看法。相反，它們會執著於某一觀點不放。同時把自己的觀點強加於人，好像傳播福音那樣。我們只要想像有幾個自我或超我這樣強的人走在一起，世界會變得怎樣。現今世界其實正是如此，於是造成宗教狂熱主義和各種的暴力。</p>
+
+          <p>要對治這個問題，不能只治其標，最重要的是對治其本。如果你希望世界有和平的一天，首先你要得到內在的和平。自我和超我紛亂不休的境界，不可能找到解決問題的答案。答案只有在和平之中，在集體無意識中尋找。當意識進入了這個境界，便不會執著於任何思維概念，不會再對別人說教。此時我們不會去把事物分崩離析，反而會作總覽綜合，以了解事物的整體面相。此時我們有如滴水進入汪洋，眼界變得無窮無限。無窮的智慧啓發了頭腦，此種智</p>
+        </div>
+      </div>
+
+      <div class="leaf">
+        <div class="leaf-inner">
+          <p>慧能令我們看穿不同事物背後的同一性，讓我們知道世間各種事態均是整體大有的一個面相。然而，此種智慧只通於連接集體無意識的頭腦。我們往往想求教於有此種大智的人，但如果找不到，何不自己連接到這個集體無意識，自己直接得到這種大智呢？說時容易，最大的問題是如何連接得上，如何選擇正確的入門途徑？現在市面上有許多牟利的團體，我們應如何選擇？通常在起初時，我們都是通過試誤的方式來選擇。有些團體表面看來很好，但內裏卻問題多多，這時離開它，轉到另一個團體去也不會太壞。又有一些團體，他們話說得很漂亮，但說的是一套，做的是另一套。許多宗教便是這樣，它們的教義是正確的，但行出來的完全不同。當印度聖雄甘地住在南非的時候，他很嚮往基督教，認為是解決社會種姓制度問題的答案。他懷著滿腔熱誠跑到教堂，所得到的待遇卻是被驅趕坐在一旁的黑人席。甘地當時立即起座離開，永不回頭。那些宗教人士如何能夠一邊大談慈愛，一邊對人大肆壓迫呢。求道者若是真心誠意，必能認出正確的道路。</p>
+
+          <p>無論追尋甚麼，終有一天你會找到。但是一般事物都有苦樂兩面，不能滿足求道者的真正需要，此所以在粗淺的層次追求不會帶來真正的滿足，就像兒童有了一個玩具，還會希望有另一個一樣。只有深入其內，不怕艱辛的求道者才能得到成就。為採明珠我們甘願深潛碧海，但如果沒有最初靈感的啓發，又有誰又會去冒險深潛呢？其實靈感早就潛藏在我們體內的一個泉源。當這個泉源受到發動，人便會昇進為神。潛能之發動，就如種子生長成大樹一樣。這是生命中最大的奇蹟。古往今來，求道者不知幾凡，但那些追求</p>
+        </div>
+      </div>
+
+      <div class="leaf">
+        <div class="leaf-inner">
+          <p>外在形式的人只能得其皮相，只有那些真正的求道者，才能深入生命之源，發現體內金光燦爛的女神，她便是我們體內的靈量（Kundalini），音譯昆達里尼，經她輕輕一觸，生命便受到點化。</p>
+
+          <p>這是奇蹟中的奇蹟，但此奇蹟千真萬確存在於每個人生命之中。千古以來智者追求之，經典闡述之，聖人敦行之。為甚麼過往求道這麼困難呢？其難處其實在於人們只在粗淺的層次追求。世人終日追求可朽壞的財貨，而忘卻不可朽壞的寶藏，就像捨棄寶鑽，拾取琉璃一樣。</p>
+
+          <p>我們要反身自躬，權衡輕重，端正求道的方向。我們須認清甚麼是暫時的擁有，長遠卻無所得，甚麼是暫時的損失，卻是永恆的得著。</p>
+
+          <p>如何才能喚醒體內金光燦爛的女神呢？只有一途，別無他法。因為她只喜歡真理，她不會聽世人喧嘩論辯，自語喃喃。她只喜歡由她創造的生命，受創造物散發出的生命能量，在她看來猶如仙樂。仙樂聲終，女神便歸於沉睡。靈量沉睡已有千年，現在，喚醒她的時間終於到了。</p>
+
+          <p>獲得自覺是我們的權利，這是很久很久以前神已預定的。且讓我們堅固求道之心，喚醒體內的靈量，到那時，我們便會發現內在神聖的真我。</p>
+
+          <div class="leaf-foot">◇</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="dots" id="dots">
+    <div class="dot active"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  const track = document.getElementById('track');
+  const leaves = document.querySelectorAll('.leaf');
+  const dots = document.querySelectorAll('.dot');
+  const curPage = document.getElementById('curPage');
+  const edgeLeft = document.getElementById('edgeLeft');
+  const edgeRight = document.getElementById('edgeRight');
+  const total = leaves.length;
+  let index = 0;
+  let startX = 0;
+  let startY = 0;
+  let dragging = false;
+  let currentTranslate = 0;
+
+  function viewportWidth(){
+    return document.querySelector('.book').clientWidth;
+  }
+
+  function goTo(i, animate){
+    index = Math.max(0, Math.min(total - 1, i));
+    const w = viewportWidth();
+    track.style.transition = animate === false ? 'none' : '';
+    track.style.transform = `translateX(${-index * w}px)`;
+    dots.forEach((d, n) => d.classList.toggle('active', n === index));
+    curPage.textContent = index + 1;
+    edgeLeft.classList.toggle('show', index > 0);
+    edgeRight.classList.toggle('show', index < total - 1);
+  }
+
+  window.addEventListener('resize', () => goTo(index, false));
+
+  const book = document.getElementById('book');
+
+  book.addEventListener('touchstart', (e) => {
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    dragging = true;
+    track.style.transition = 'none';
+  }, {passive:true});
+
+  book.addEventListener('touchmove', (e) => {
+    if(!dragging) return;
+    const dx = e.touches[0].clientX - startX;
+    const dy = e.touches[0].clientY - startY;
+    if(Math.abs(dy) > Math.abs(dx)) return;
+    const w = viewportWidth();
+    currentTranslate = -index * w + dx;
+    track.style.transform = `translateX(${currentTranslate}px)`;
+  }, {passive:true});
+
+  book.addEventListener('touchend', (e) => {
+    if(!dragging) return;
+    dragging = false;
+    const dx = e.changedTouches[0].clientX - startX;
+    const w = viewportWidth();
+    track.style.transition = '';
+    if (Math.abs(dx) > w * 0.18) {
+      if (dx < 0) goTo(index + 1);
+      else goTo(index - 1);
+    } else {
+      goTo(index);
+    }
+  });
+
+  edgeLeft.addEventListener('click', () => goTo(index - 1));
+  edgeRight.addEventListener('click', () => goTo(index + 1));
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight') goTo(index + 1);
+    if (e.key === 'ArrowLeft') goTo(index - 1);
+  });
+
+  goTo(0, false);
+})();
+</script>
+
+</body>
+</html>

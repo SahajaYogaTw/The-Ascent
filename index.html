@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>生命的升進</title>
+<style>
+  :root{
+    --gold:#b8975f;
+    --soft:#f7f4ee;
+    --card:#fffdf9;
+    --muted:#9c9484;
+    --ink:#4a4238;
+    --line:#e8e2d6;
+  }
+
+  *{box-sizing:border-box;}
+
+  body{
+    margin:0;
+    padding:0;
+    background:var(--soft);
+    font-family:"Noto Serif TC","PMingLiU","Songti TC",serif;
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+  }
+
+  .page{
+    max-width:640px;
+    margin:0 auto;
+    padding:70px 28px 90px;
+  }
+
+  .mark{
+    text-align:center;
+    color:var(--gold);
+    font-size:16px;
+    letter-spacing:0.3em;
+    margin-bottom:22px;
+  }
+
+  h1{
+    text-align:center;
+    font-size:30px;
+    font-weight:600;
+    letter-spacing:0.18em;
+    margin:0 0 10px;
+    color:var(--ink);
+  }
+
+  .subtitle-en{
+    text-align:center;
+    font-size:12px;
+    letter-spacing:0.24em;
+    color:var(--muted);
+    margin-bottom:4px;
+  }
+
+  .byline{
+    text-align:center;
+    font-size:13px;
+    color:var(--muted);
+    letter-spacing:0.08em;
+    margin-top:14px;
+  }
+
+  .divider{
+    text-align:center;
+    color:var(--gold);
+    font-size:14px;
+    letter-spacing:0.4em;
+    margin:34px 0;
+  }
+
+  .foreword{
+    background:var(--card);
+    border-radius:18px;
+    padding:26px 24px;
+    box-shadow:0 1px 3px rgba(74,66,56,0.06);
+    margin-bottom:44px;
+  }
+
+  .foreword p{
+    font-size:14.5px;
+    line-height:1.95;
+    letter-spacing:0.02em;
+    margin:0;
+    color:var(--ink);
+    text-indent:2em;
+  }
+
+  .toc-label{
+    font-size:12px;
+    letter-spacing:0.3em;
+    color:var(--gold);
+    margin:0 0 18px 4px;
+  }
+
+  .toc{
+    background:var(--card);
+    border-radius:18px;
+    overflow:hidden;
+    box-shadow:0 1px 3px rgba(74,66,56,0.06);
+  }
+
+  .chapter{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:18px 22px;
+    text-decoration:none;
+    color:var(--ink);
+    border-bottom:1px solid var(--line);
+  }
+
+  .chapter:last-child{ border-bottom:none; }
+
+  .chapter .num{
+    font-size:11px;
+    color:var(--gold);
+    letter-spacing:0.1em;
+    width:34px;
+    flex:0 0 auto;
+  }
+
+  .chapter .name{
+    flex:1 1 auto;
+    font-size:15.5px;
+    letter-spacing:0.03em;
+    padding:0 8px;
+  }
+
+  .chapter .arrow{
+    font-size:13px;
+    color:var(--muted);
+    flex:0 0 auto;
+  }
+
+  .chapter.disabled{
+    color:var(--muted);
+    cursor:default;
+  }
+
+  .chapter.disabled .name{ color:var(--muted); }
+  .chapter.disabled .num{ color:var(--muted); opacity:0.6; }
+
+  .footer{
+    text-align:center;
+    margin-top:50px;
+    font-size:12px;
+    color:var(--muted);
+    letter-spacing:0.12em;
+    line-height:1.9;
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <div class="mark">❖</div>
+  <h1>生命的升進</h1>
+  <div class="subtitle-en">THE ASCENT</div>
+  <div class="byline">［印］馬哈贊　著　·　根據 1993 年印度德里版譯出</div>
+
+  <div class="divider">◇</div>
+
+  <div class="foreword">
+    <p>靈體不斷呼喚我寫作，字句不斷從她，錫呂．瑪塔吉．涅瑪拉．德維（Shri Mataji Nirmala Devi）女士處來到我的筆端。她為我們這個新時代，即水瓶座時代（Aquarian Age）帶來一種體驗真理的方法，叫霎哈嘉瑜伽（Sahaja Yoga）。</p>
+  </div>
+
+  <div class="toc-label">目　錄</div>
+
+  <div class="toc">
+    <a class="chapter" href="第一章_求道者.html">
+      <span class="num">01</span>
+      <span class="name">求道者</span>
+      <span class="arrow">›</span>
+    </a>
+    <a class="chapter disabled" href="#">
+      <span class="num">02</span>
+      <span class="name">靈量（Kundalini）</span>
+      <span class="arrow">◇</span>
+    </a>
+    <a class="chapter disabled" href="#">
+      <span class="num">03</span>
+      <span class="name">陰脈、陽脈和中脈</span>
+      <span class="arrow">◇</span>
+    </a>
+    <a class="chapter disabled" href="#">
+      <span class="num">04</span>
+      <span class="name">人體小宇宙</span>
+      <span class="arrow">◇</span>
+    </a>
+    <a class="chapter disabled" href="#">
+      <span class="num">05</span>
+      <span class="name">根輪（Mooladhara Chakra）</span>
+      <span class="arrow">◇</span>
+    </a>
+    <a class="chapter disabled" href="#">
+      <span class="num">06</span>
+      <span class="name">腹輪（Swadisthan Chakra）</span>
+      <span class="arrow">◇</span>
+    </a>
+    <a class="chapter disabled" href="#">
+      <span class="num">07</span>
+      <span class="name">臍輪（Nabhi Chakra）</span>
+      <span class="arrow">◇</span>
+    </a>
+    <a class="chapter disabled" href="#">
+      <span class="num">08</span>
+      <span class="name">集體意識</span>
+      <span class="arrow">◇</span>
+    </a>
+    <a class="chapter disabled" href="#">
+      <span class="num">09</span>
+      <span class="name">十大宗師</span>
+      <span class="arrow">◇</span>
+    </a>
+    <a class="chapter disabled" href="#">
+      <span class="num">10</span>
+      <span class="name">心輪（Heart Chakra）</span>
+      <span class="arrow">◇</span>
+    </a>
+    <a class="chapter disabled" href="#">
+      <span class="num">11</span>
+      <span class="name">喉輪（Visshudhi Chakra）</span>
+      <span class="arrow">◇</span>
+    </a>
+    <a class="chapter disabled" href="#">
+      <span class="num">12</span>
+      <span class="name">額輪（Agnya Chakra）</span>
+      <span class="arrow">◇</span>
+    </a>
+    <a class="chapter disabled" href="#">
+      <span class="num">13</span>
+      <span class="name">頂輪（Sahasrara Chakra）</span>
+      <span class="arrow">◇</span>
+    </a>
+    <a class="chapter disabled" href="#">
+      <span class="num">14</span>
+      <span class="name">神聖的生命能量</span>
+      <span class="arrow">◇</span>
+    </a>
+    <a class="chapter disabled" href="#">
+      <span class="num">15</span>
+      <span class="name">靜坐冥想</span>
+      <span class="arrow">◇</span>
+    </a>
+    <a class="chapter disabled" href="#">
+      <span class="num">16</span>
+      <span class="name">萬物之母</span>
+      <span class="arrow">◇</span>
+    </a>
+    <a class="chapter disabled" href="#">
+      <span class="num">17</span>
+      <span class="name">後記</span>
+      <span class="arrow">◇</span>
+    </a>
+  </div>
+
+  <div class="footer">霎哈嘉瑜伽　Sahaja Yoga<br>◇</div>
+
+</div>
+
+<script>
+  document.querySelectorAll('.chapter.disabled').forEach(function(el){
+    el.addEventListener('click', function(e){ e.preventDefault(); });
+  });
+</script>
+
+</body>
+</html>
