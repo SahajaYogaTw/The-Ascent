@@ -11,11 +11,11 @@
   :root{
     --gold:#a9895a;
     --gold-soft:#c8ab7c;
-    --ink:#4a4238;
-    --ink-soft:#7a7062;
-    --soft:#f6f2ea;
-    --card:#fffdf8;
-    --muted:#a39885;
+    --ink:#2e2820;
+    --ink-soft:#5c5344;
+    --soft:#fdfcfa;
+    --card:#ffffff;
+    --muted:#8c8070;
     --border:#e6ddc9;
     --shadow:0 2px 18px rgba(74,66,56,0.06);
   }
@@ -69,18 +69,18 @@
     font-style:italic;
     font-weight:500;
     color:var(--gold);
-    font-size:15px;
+    font-size:17px;
     letter-spacing:.12em;
     margin-bottom:18px;
   }
   .cover .author{
-    font-size:13px;
+    font-size:15px;
     color:var(--ink-soft);
     letter-spacing:.15em;
     margin-bottom:2px;
   }
   .cover .author-en{
-    font-size:12px;
+    font-size:14px;
     color:var(--muted);
     letter-spacing:.1em;
     margin-bottom:40px;
@@ -104,8 +104,8 @@
     cursor:pointer;
   }
   .continue-card.show{display:flex;}
-  .continue-card .cc-label{font-size:11px; color:var(--muted); letter-spacing:.15em; margin-bottom:4px;}
-  .continue-card .cc-title{font-size:14px; color:var(--ink); font-weight:500;}
+  .continue-card .cc-label{font-size:12px; color:var(--muted); letter-spacing:.15em; margin-bottom:4px;}
+  .continue-card .cc-title{font-size:16px; color:var(--ink); font-weight:500;}
   .continue-card .cc-arrow{color:var(--gold); font-size:16px;}
 
   .search-wrap{
@@ -122,7 +122,7 @@
   .search-box input{
     flex:1; border:none; outline:none; background:transparent;
     font-family:"Noto Sans TC",sans-serif;
-    font-size:14px; color:var(--ink);
+    font-size:16px; color:var(--ink);
   }
   .search-box input::placeholder{color:var(--muted);}
 
@@ -138,14 +138,14 @@
     margin-bottom:10px;
     cursor:pointer;
   }
-  .sr-item .sr-chap{font-size:11px; color:var(--gold); letter-spacing:.1em; margin-bottom:5px;}
-  .sr-item .sr-snippet{font-size:13px; color:var(--ink-soft); line-height:1.7;}
+  .sr-item .sr-chap{font-size:12px; color:var(--gold); letter-spacing:.1em; margin-bottom:5px;}
+  .sr-item .sr-snippet{font-size:15px; color:var(--ink-soft); line-height:1.7;}
   .sr-item mark{background:none; color:var(--gold); font-weight:600;}
-  .sr-count{font-size:12px; color:var(--muted); padding:0 2px 10px; letter-spacing:.05em;}
+  .sr-count{font-size:13px; color:var(--muted); padding:0 2px 10px; letter-spacing:.05em;}
 
   .toc-section-label{
     padding:0 24px 10px;
-    font-size:11px;
+    font-size:12px;
     letter-spacing:.25em;
     color:var(--muted);
   }
@@ -161,18 +161,26 @@
   .toc-item:last-child{border-bottom:none;}
   .toc-num{
     font-family:"Noto Serif TC",serif;
-    font-size:13px;
+    font-size:14px;
     color:var(--gold-soft);
     min-width:24px;
   }
   .toc-title{
     flex:1;
-    font-size:15px;
+    font-size:17px;
     color:var(--ink);
     font-weight:400;
     letter-spacing:.02em;
   }
-  .toc-arrow{color:var(--muted); font-size:13px;}
+  .toc-title-en{
+    display:block;
+    font-size:12px;
+    font-style:italic;
+    color:var(--gold-soft);
+    letter-spacing:.06em;
+    margin-top:3px;
+  }
+  .toc-arrow{color:var(--muted); font-size:14px;}
   .toc-item.preface .toc-title{font-family:"Noto Serif TC",serif; font-weight:500;}
 
   .theme-toggle-fixed{
@@ -263,6 +271,15 @@
     font-size:22px;
     letter-spacing:.06em;
     margin:0 0 40px;
+  }
+  .chap-title-en{
+    display:block;
+    font-size:14px;
+    font-style:italic;
+    font-weight:500;
+    color:var(--gold);
+    letter-spacing:.1em;
+    margin-top:8px;
   }
   .reader-body p{
     font-family:"Noto Serif TC",serif;
@@ -404,8 +421,10 @@ function renderToc(){
   sections.forEach((s, i) => {
     const el = document.createElement('div');
     el.className = 'toc-item' + (s.isPreface ? ' preface' : '');
+    const t = splitTitle(s.title);
+    const titleHtml = t.sub ? `${t.main}<span class="toc-title-en">${t.sub}</span>` : t.main;
     el.innerHTML = `<div class="toc-num">${s.isPreface ? '◈' : String(i).padStart(2,'0')}</div>
-      <div class="toc-title">${s.title}</div>
+      <div class="toc-title">${titleHtml}</div>
       <div class="toc-arrow">▸</div>`;
     el.addEventListener('click', () => openSection(i, true));
     tocList.appendChild(el);
@@ -422,11 +441,22 @@ function checkContinue(){
   }
 }
 
+function splitTitle(title){
+  const m = title.match(/^(.*?)[（(]([^）)]*)[）)]\s*$/);
+  if(m){
+    return { main: m[1].trim(), sub: '（' + m[2].trim() + '）' };
+  }
+  return { main: title, sub: null };
+}
+
 function openSection(idx, saveIt, scrollFrac){
   currentSection = idx;
   const s = sections[idx];
   document.getElementById('chapEyebrow').textContent = s.isPreface ? '導言' : `第 ${idx} 章　·　全書共 ${chapters.length} 章`;
-  document.getElementById('chapTitle').textContent = s.title;
+  const t = splitTitle(s.title);
+  document.getElementById('chapTitle').innerHTML = t.sub
+    ? `${t.main}<span class="chap-title-en">${t.sub}</span>`
+    : t.main;
   const body = document.getElementById('chapContent');
   body.innerHTML = '';
   s.paragraphs.forEach(p => {
