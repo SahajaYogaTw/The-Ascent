@@ -277,6 +277,11 @@
     cursor:pointer;
   }
   .theme-btn-inline:active{background:var(--soft);}
+  .theme-btn-inline.active-mode{
+    background:var(--gold);
+    color:#fff;
+    border-color:var(--gold);
+  }
 
   .progress-track{
     height:2px; background:var(--border);
@@ -349,32 +354,40 @@
     padding:0 1px;
     border-radius:2px;
   }
-  .hl-toolbar{
+  .hl-colorbar{
     position:fixed;
-    z-index:80;
+    left:0; right:0; bottom:0;
+    z-index:70;
     display:none;
-    align-items:center; gap:10px;
-    background:var(--ink);
-    color:var(--soft);
-    font-size:13px;
-    letter-spacing:.05em;
-    padding:9px 14px;
-    border-radius:12px;
-    cursor:pointer;
-    box-shadow:0 6px 20px rgba(0,0,0,.22);
-    transform:translate(-50%, -100%);
-    white-space:nowrap;
+    align-items:center;
+    justify-content:space-between;
+    gap:14px;
+    background:var(--card);
+    border-top:1px solid var(--border);
+    padding:14px 22px calc(14px + env(safe-area-inset-bottom, 0px));
+    box-shadow:0 -6px 22px rgba(0,0,0,.10);
   }
-  .hl-toolbar span.sym{font-size:14px;}
-  .hl-toolbar.show{display:flex;}
+  .hl-colorbar.show{display:flex;}
+  .hl-colorbar-label{font-size:12px; color:var(--muted); letter-spacing:.03em; flex:1; line-height:1.5;}
+  .hl-swatch-row{display:flex; align-items:center; gap:11px;}
   .hl-swatch{
-    width:22px; height:22px;
+    width:26px;height:26px;
     border-radius:50%;
-    border:2px solid rgba(255,255,255,.55);
+    border:2px solid transparent;
+    box-shadow:0 0 0 1px var(--border);
     cursor:pointer;
+  }
+  .hl-swatch.selected{
+    box-shadow:0 0 0 2px var(--ink);
+  }
+  .hl-done{
+    font-size:13px; color:var(--gold); font-weight:600;
+    letter-spacing:.05em;
+    cursor:pointer;
+    padding:6px 4px;
     flex-shrink:0;
   }
-  .hl-swatch:active{transform:scale(0.9);}
+  .hl-mode-padding{ padding-bottom:70px; }
 
   .chap-nav{
     display:flex; justify-content:space-between; align-items:center;
@@ -456,6 +469,7 @@
           <div class="fc-btn big" id="fontInc" title="放大字級">A</div>
         </div>
         <div class="theme-btn-inline" id="themeToggleReader" title="日／夜間模式">☾</div>
+        <div class="theme-btn-inline" id="hlModeToggle" title="劃重點">✎</div>
       </div>
     </div>
     <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
@@ -484,12 +498,15 @@
     <div class="mynotes-list" id="mynotesList"></div>
   </div>
 
-  <div class="hl-toolbar" id="hlToolbar">
-    <span class="sym">✎</span>
-    <div class="hl-swatch" data-color="#f4cf6b" style="background:#f4cf6b"></div>
-    <div class="hl-swatch" data-color="#a9c9a0" style="background:#a9c9a0"></div>
-    <div class="hl-swatch" data-color="#e3a8ad" style="background:#e3a8ad"></div>
-    <div class="hl-swatch" data-color="#9db4d1" style="background:#9db4d1"></div>
+  <div class="hl-colorbar" id="hlColorBar">
+    <div class="hl-colorbar-label">選取文字後，點顏色標記</div>
+    <div class="hl-swatch-row">
+      <div class="hl-swatch" data-color="#f4cf6b" style="background:#f4cf6b"></div>
+      <div class="hl-swatch" data-color="#a9c9a0" style="background:#a9c9a0"></div>
+      <div class="hl-swatch" data-color="#e3a8ad" style="background:#e3a8ad"></div>
+      <div class="hl-swatch" data-color="#9db4d1" style="background:#9db4d1"></div>
+    </div>
+    <div class="hl-done" id="hlDoneBtn">完成</div>
   </div>
 
 </div>
@@ -849,6 +866,7 @@ window.addEventListener('scroll', () => {
 
 document.getElementById('backBtn').addEventListener('click', () => {
   persistProgress();
+  setHlMode(false);
   screenReader.classList.remove('active');
   screenToc.classList.add('active');
   checkContinue();
@@ -965,67 +983,74 @@ renderToc();
 checkContinue();
 renderMyNotes();
 
-// ---------- Highlight selection toolbar ----------
-const hlToolbar = document.getElementById('hlToolbar');
+// ---------- Highlight mode (select text, tap a color in the fixed bottom bar) ----------
 const chapContentEl = document.getElementById('chapContent');
-let pendingHL = null;
+const hlModeToggle = document.getElementById('hlModeToggle');
+const hlColorBar = document.getElementById('hlColorBar');
+const readerBodyEl = document.getElementById('readerBody');
+let hlModeOn = false;
+let hlActiveColor = null;
 
-function hideToolbar(){
-  hlToolbar.classList.remove('show');
-  pendingHL = null;
+function setHlMode(on){
+  hlModeOn = on;
+  hlModeToggle.classList.toggle('active-mode', on);
+  hlColorBar.classList.toggle('show', on);
+  readerBodyEl.classList.toggle('hl-mode-padding', on);
+  if(!on) window.getSelection().removeAllRanges();
 }
-function showToolbarForRange(range){
-  const rect = range.getBoundingClientRect();
-  if(!rect || (rect.width === 0 && rect.height === 0)){ hideToolbar(); return; }
-  const left = Math.min(Math.max(rect.left + rect.width / 2, 60), window.innerWidth - 60);
-  hlToolbar.style.left = left + 'px';
-  hlToolbar.style.top = Math.max(rect.top, 50) + 'px';
-  hlToolbar.classList.add('show');
-}
+hlModeToggle.addEventListener('click', () => setHlMode(!hlModeOn));
+document.getElementById('hlDoneBtn').addEventListener('click', () => setHlMode(false));
+
 function getOffsetWithin(container, node, offset){
   const preRange = document.createRange();
   preRange.selectNodeContents(container);
   preRange.setEnd(node, offset);
   return preRange.toString().length;
 }
-function handleSelectionChange(){
-  if(!screenReader.classList.contains('active')){ hideToolbar(); return; }
+
+// Read whatever is currently selected, right now — called at the moment a
+// swatch is pressed (mousedown/touchstart), before the browser has a chance
+// to collapse the selection because of the tap itself.
+function captureSelectionRange(){
   const sel = window.getSelection();
-  if(!sel || sel.isCollapsed || sel.rangeCount === 0){ hideToolbar(); return; }
+  if(!sel || sel.isCollapsed || sel.rangeCount === 0) return null;
   const range = sel.getRangeAt(0);
   const anchorNode = range.commonAncestorContainer;
   const elNode = anchorNode.nodeType === 3 ? anchorNode.parentElement : anchorNode;
   const pEl = elNode ? elNode.closest('p[data-key]') : null;
-  if(!pEl || !chapContentEl.contains(pEl)){ hideToolbar(); return; }
-  if(!pEl.contains(range.startContainer) || !pEl.contains(range.endContainer)){ hideToolbar(); return; }
+  if(!pEl || !chapContentEl.contains(pEl)) return null;
+  if(!pEl.contains(range.startContainer) || !pEl.contains(range.endContainer)) return null;
   const start = getOffsetWithin(pEl, range.startContainer, range.startOffset);
   const end = getOffsetWithin(pEl, range.endContainer, range.endOffset);
-  if(end <= start){ hideToolbar(); return; }
-  pendingHL = { key: pEl.getAttribute('data-key'), start, end };
-  showToolbarForRange(range);
+  if(end <= start) return null;
+  return { key: pEl.getAttribute('data-key'), start, end };
 }
-document.addEventListener('selectionchange', () => {
-  clearTimeout(window._selTimer);
-  window._selTimer = setTimeout(handleSelectionChange, 60);
-});
-// Prevent the browser from clearing the text selection when the toolbar itself
-// is pressed — without this, tapping a swatch on touch devices can collapse
-// the selection before our click handler runs, silently dropping the highlight.
-hlToolbar.addEventListener('mousedown', e => e.preventDefault());
-hlToolbar.addEventListener('touchstart', e => e.preventDefault(), { passive:false });
-hlToolbar.querySelectorAll('.hl-swatch').forEach(sw => {
-  sw.addEventListener('click', () => {
-    if(!pendingHL) return;
-    const color = sw.getAttribute('data-color');
-    const fullText = getParaTextByKey(currentSection, pendingHL.key);
-    addHighlight(currentSection, pendingHL.key, pendingHL.start, pendingHL.end, color);
-    const pEl = chapContentEl.querySelector(`p[data-key="${pendingHL.key}"]`);
-    if(pEl) renderParaText(pEl, fullText, pendingHL.key);
+
+hlColorBar.querySelectorAll('.hl-swatch').forEach(sw => {
+  let firedAt = 0;
+  const activate = (e) => {
+    const now = Date.now();
+    if(now - firedAt < 400) return; // avoid double-firing from both mousedown and touchstart
+    firedAt = now;
+    const hl = captureSelectionRange();
+    e.preventDefault();
+    hlActiveColor = sw.getAttribute('data-color');
+    hlColorBar.querySelectorAll('.hl-swatch').forEach(s2 => s2.classList.remove('selected'));
+    sw.classList.add('selected');
+    if(!hl) return;
+    const fullText = getParaTextByKey(currentSection, hl.key);
+    addHighlight(currentSection, hl.key, hl.start, hl.end, hlActiveColor);
+    const pEl = chapContentEl.querySelector(`p[data-key="${hl.key}"]`);
+    if(pEl) renderParaText(pEl, fullText, hl.key);
+    renderMyNotes();
     window.getSelection().removeAllRanges();
-    hideToolbar();
-  });
+  };
+  sw.addEventListener('mousedown', activate);
+  sw.addEventListener('touchstart', activate, { passive:false });
 });
+
 chapContentEl.addEventListener('click', (e) => {
+  // Tapping an existing highlight always removes just that mark.
   const mk = e.target.closest('mark.user-hl');
   if(!mk) return;
   const pEl = mk.closest('p[data-key]');
@@ -1035,6 +1060,7 @@ chapContentEl.addEventListener('click', (e) => {
   removeHighlight(currentSection, key, id);
   const fullText = getParaTextByKey(currentSection, key);
   renderParaText(pEl, fullText, key);
+  renderMyNotes();
 });
 </script>
 </body>
