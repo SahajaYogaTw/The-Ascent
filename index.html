@@ -282,6 +282,15 @@
     color:#fff;
     border-color:var(--gold);
   }
+  #hlModeToggle{
+    color:#e8552f;
+    border-color:#f0c3b3;
+  }
+  #hlModeToggle.active-mode{
+    background:#e8552f;
+    color:#fff;
+    border-color:#e8552f;
+  }
 
   .progress-track{
     height:2px; background:var(--border);
@@ -499,7 +508,7 @@
   </div>
 
   <div class="hl-colorbar" id="hlColorBar">
-    <div class="hl-colorbar-label">選取文字後，點顏色標記</div>
+    <div class="hl-colorbar-label">按住文字拖曳選範圍，放開後點顏色</div>
     <div class="hl-swatch-row">
       <div class="hl-swatch" data-color="#f4cf6b" style="background:#f4cf6b"></div>
       <div class="hl-swatch" data-color="#a9c9a0" style="background:#a9c9a0"></div>
