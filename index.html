@@ -178,13 +178,13 @@
   .theme-toggle-fixed{
     position:fixed;
     top:20px; right:20px;
-    width:38px;height:38px;
+    width:42px;height:42px;
     border-radius:50%;
     background:var(--card);
     border:1px solid var(--border);
     display:flex; align-items:center; justify-content:center;
     color:var(--gold);
-    font-size:15px;
+    font-size:17px;
     cursor:pointer;
     z-index:50;
     box-shadow:var(--shadow);
@@ -207,22 +207,42 @@
     padding:6px 8px 6px 0;
   }
   .back-btn span.sym{font-size:15px;}
-  .font-controls{display:flex; align-items:center; gap:2px;}
+  .reader-controls{display:flex; align-items:center; gap:12px;}
+  .font-controls{
+    display:flex; align-items:center; gap:3px;
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:11px;
+    padding:3px;
+  }
   .fc-btn{
-    width:32px;height:32px;
+    width:38px;height:38px;
     display:flex;align-items:center;justify-content:center;
-    color:var(--ink-soft);
+    color:var(--ink);
     font-family:"Noto Serif TC",serif;
+    font-weight:600;
     cursor:pointer;
     border-radius:8px;
   }
-  .fc-btn:active{background:var(--card);}
+  .fc-btn:active{background:var(--soft);}
   .fc-btn.small{font-size:13px;}
-  .fc-btn.big{font-size:19px;}
+  .fc-btn.big{font-size:20px;}
+  .fc-divider{width:1px; height:20px; background:var(--border);}
+  .theme-btn-inline{
+    width:40px;height:40px;
+    border-radius:11px;
+    background:var(--card);
+    border:1px solid var(--border);
+    display:flex; align-items:center; justify-content:center;
+    color:var(--gold);
+    font-size:16px;
+    cursor:pointer;
+  }
+  .theme-btn-inline:active{background:var(--soft);}
 
   .progress-track{
     height:2px; background:var(--border);
-    position:sticky; top:52px; z-index:39;
+    position:sticky; top:68px; z-index:39;
   }
   .progress-fill{height:100%; background:var(--gold); width:0%; transition:width .1s linear;}
 
@@ -242,11 +262,7 @@
     font-weight:700;
     font-size:22px;
     letter-spacing:.06em;
-    margin:0 0 6px;
-  }
-  .chap-rule{
-    width:26px;height:1px;background:var(--gold-soft);
-    margin:20px auto 34px; opacity:.7;
+    margin:0 0 40px;
   }
   .reader-body p{
     font-family:"Noto Serif TC",serif;
@@ -297,10 +313,9 @@
 <body data-theme="day">
 <div class="app">
 
-  <div class="theme-toggle-fixed" id="themeToggle">☾</div>
-
   <!-- ===== TOC / Home screen ===== -->
   <div class="screen active" id="screen-toc">
+    <div class="theme-toggle-fixed" id="themeToggleCover">☾</div>
     <div class="cover">
       <h1>生命的昇進</h1>
       <div class="en">The Ascent</div>
@@ -335,16 +350,19 @@
   <div class="screen" id="screen-reader">
     <div class="reader-top">
       <div class="back-btn" id="backBtn"><span class="sym">◂</span> 目錄</div>
-      <div class="font-controls">
-        <div class="fc-btn small" id="fontDec">A</div>
-        <div class="fc-btn big" id="fontInc">A</div>
+      <div class="reader-controls">
+        <div class="font-controls">
+          <div class="fc-btn small" id="fontDec" title="縮小字級">A</div>
+          <div class="fc-divider"></div>
+          <div class="fc-btn big" id="fontInc" title="放大字級">A</div>
+        </div>
+        <div class="theme-btn-inline" id="themeToggleReader" title="日／夜間模式">☾</div>
       </div>
     </div>
     <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
     <div class="reader-body" id="readerBody">
       <div class="chap-eyebrow" id="chapEyebrow"></div>
       <h2 class="chap-title" id="chapTitle"></h2>
-      <div class="chap-rule"></div>
       <div id="chapContent"></div>
     </div>
     <div class="chap-nav">
@@ -458,9 +476,12 @@ window.addEventListener('scroll', () => {
     updateProgress();
   }
 });
-window.addEventListener('beforeunload', persistProgress);
+window.addEventListener('beforeunload', () => {
+  if(screenReader.classList.contains('active')) persistProgress();
+});
 let scrollSaveTimer;
 window.addEventListener('scroll', () => {
+  if(!screenReader.classList.contains('active')) return;
   clearTimeout(scrollSaveTimer);
   scrollSaveTimer = setTimeout(persistProgress, 500);
 });
@@ -497,13 +518,17 @@ document.getElementById('fontDec').addEventListener('click', () => {
 // Theme toggle
 function applyTheme(t){
   document.body.setAttribute('data-theme', t);
-  document.getElementById('themeToggle').textContent = t === 'night' ? '☼' : '☾';
+  const icon = t === 'night' ? '☼' : '☾';
+  document.getElementById('themeToggleCover').textContent = icon;
+  document.getElementById('themeToggleReader').textContent = icon;
   localStorage.setItem(THEME_KEY, t);
 }
-document.getElementById('themeToggle').addEventListener('click', () => {
+function toggleTheme(){
   const cur = document.body.getAttribute('data-theme');
   applyTheme(cur === 'night' ? 'day' : 'night');
-});
+}
+document.getElementById('themeToggleCover').addEventListener('click', toggleTheme);
+document.getElementById('themeToggleReader').addEventListener('click', toggleTheme);
 applyTheme(localStorage.getItem(THEME_KEY) || 'day');
 
 // Search
