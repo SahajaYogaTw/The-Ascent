@@ -314,12 +314,27 @@
     overflow:hidden;
     touch-action:pan-y;
   }
-  .page-content{
+  .pages-track{
+    display:flex;
     height:100%;
-    column-fill:auto;
-    box-sizing:border-box;
     transition:transform .32s cubic-bezier(.22,.61,.36,1);
     will-change:transform;
+  }
+  .page-slide{
+    flex:0 0 100%;
+    width:100%;
+    height:100%;
+    box-sizing:border-box;
+    padding:0 34px;
+    overflow:hidden;
+  }
+  .page-measure{
+    position:fixed;
+    top:0; left:-9999px;
+    visibility:hidden;
+    pointer-events:none;
+    box-sizing:border-box;
+    padding:0 34px;
   }
   .page-edge{
     position:absolute;
@@ -364,7 +379,7 @@
     letter-spacing:.1em;
     margin-top:8px;
   }
-  .page-content p{
+  .page-slide p, .page-measure p{
     font-family:"Noto Serif TC",serif;
     line-height:2.15;
     letter-spacing:.03em;
@@ -385,19 +400,19 @@
     color:var(--ink-soft);
     font-style:italic;
   }
-  .page-content p.attribution{
+  .page-slide p.attribution, .page-measure p.attribution{
     font-family:"Noto Sans TC",sans-serif;
     font-size:.85em;
     color:var(--muted);
     text-align:right;
     letter-spacing:.05em;
   }
-  .page-content mark{
+  .page-slide mark, .page-measure mark{
     background:rgba(169,137,90,.22);
     color:inherit;
     border-radius:2px;
   }
-  .page-content mark.user-hl{
+  .page-slide mark.user-hl, .page-measure mark.user-hl{
     cursor:pointer;
     padding:0 1px;
     border-radius:2px;
@@ -504,14 +519,11 @@
     </div>
     <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
     <div class="page-viewport" id="pageViewport">
-      <div class="page-content" id="pageContent">
-        <div class="chap-eyebrow" id="chapEyebrow"></div>
-        <h2 class="chap-title" id="chapTitle"></h2>
-        <div id="chapContent"></div>
-      </div>
+      <div class="pages-track" id="pagesTrack"></div>
       <div class="page-edge left" id="pageEdgeLeft"></div>
       <div class="page-edge right" id="pageEdgeRight"></div>
     </div>
+    <div class="page-measure" id="pageMeasure"></div>
     <div class="page-indicator" id="pageIndicator"></div>
   </div>
 
@@ -618,7 +630,7 @@ function renderParaText(pEl, text, key){
 let currentSection = 0;
 let currentPage = 0;
 let totalPages = 1;
-const PAGE_MARGIN = 26; // px horizontal margin on each side of a page
+const PAGE_MARGIN = 34; // px horizontal margin on each side of a page
 let fontSize = parseInt(localStorage.getItem(FONT_KEY) || '17', 10);
 
 const tocList = document.getElementById('tocList');
@@ -729,13 +741,24 @@ function splitTitle(title){
 function openSection(idx, saveIt, scrollFrac){
   currentSection = idx;
   const s = sections[idx];
-  document.getElementById('chapEyebrow').textContent = s.isPreface ? '導言' : `第 ${idx} 章　·　全書共 ${chapters.length} 章`;
+  const measure = document.getElementById('pageMeasure');
+  measure.innerHTML = '';
+  document.getElementById('pagesTrack').innerHTML = '';
+
+  const eyebrow = document.createElement('div');
+  eyebrow.className = 'chap-eyebrow';
+  eyebrow.textContent = s.isPreface ? '導言' : `第 ${idx} 章　·　全書共 ${chapters.length} 章`;
+  measure.appendChild(eyebrow);
+
   const t = splitTitle(s.title);
-  document.getElementById('chapTitle').innerHTML = t.sub
+  const titleEl = document.createElement('h2');
+  titleEl.className = 'chap-title';
+  titleEl.innerHTML = t.sub
     ? `${t.main}<span class="chap-title-en">${t.sub}</span>`
     : t.main;
-  const body = document.getElementById('chapContent');
-  body.innerHTML = '';
+  measure.appendChild(titleEl);
+
+  const body = measure;
 
   function isAttribution(p){
     return p.startsWith('---') || p.startsWith('——');
@@ -854,8 +877,8 @@ function openSection(idx, saveIt, scrollFrac){
   const initialFraction = (typeof scrollFrac === 'number') ? scrollFrac : 0;
 
   // Wait for web fonts to finish loading before measuring pages — Noto Serif TC
-  // loads asynchronously, and measuring column widths before it swaps in would
-  // give the wrong page count/text metrics once the real font arrives.
+  // loads asynchronously, and measuring page heights before it swaps in would
+  // give the wrong page breaks once the real font arrives.
   const doLayout = () => {
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
@@ -875,16 +898,66 @@ function getViewportWidth(){
   const vp = document.getElementById('pageViewport');
   return vp ? vp.clientWidth : window.innerWidth;
 }
+function getViewportHeight(){
+  const vp = document.getElementById('pageViewport');
+  return vp ? vp.clientHeight : window.innerHeight;
+}
 
+// Slices the flat list of rendered nodes (eyebrow, title, paragraphs, poem
+// blocks) into per-page containers by measuring real rendered heights —
+// far more reliable across browsers than CSS multi-column, which has known
+// quirks (especially iOS Safari) when combined with flex-computed heights.
 function layoutPages(fraction){
-  const content = document.getElementById('pageContent');
+  const track = document.getElementById('pagesTrack');
+  const measure = document.getElementById('pageMeasure');
   const vw = getViewportWidth();
-  const colWidth = Math.max(100, vw - PAGE_MARGIN * 2);
-  content.style.columnWidth = colWidth + 'px';
-  content.style.columnGap = (PAGE_MARGIN * 2) + 'px';
-  content.style.paddingLeft = PAGE_MARGIN + 'px';
-  content.style.transform = 'translateX(0px)';
-  totalPages = Math.max(1, Math.round(content.scrollWidth / vw));
+  const vh = getViewportHeight();
+
+  // Gather every content node back into the measuring container, whether
+  // it's already there (first layout after openSection) or currently
+  // scattered across existing page-slide divs (a relayout after a font
+  // size change or resize).
+  if(measure.children.length === 0){
+    Array.from(track.children).forEach(slide => {
+      while(slide.firstChild) measure.appendChild(slide.firstChild);
+    });
+  }
+  track.innerHTML = '';
+
+  measure.style.width = vw + 'px';
+  const nodes = Array.from(measure.children);
+
+  if(nodes.length === 0){
+    totalPages = 1;
+    currentPage = 0;
+    updatePageIndicator();
+    return;
+  }
+
+  void measure.offsetHeight; // force layout before measuring
+  const measureTop = measure.getBoundingClientRect().top;
+  const pages = [[]];
+  let pageStartTop = null;
+  nodes.forEach(n => {
+    const r = n.getBoundingClientRect();
+    const top = r.top - measureTop;
+    const bottom = top + r.height;
+    if(pageStartTop === null) pageStartTop = top;
+    if((bottom - pageStartTop) > vh && pages[pages.length - 1].length > 0){
+      pages.push([]);
+      pageStartTop = top;
+    }
+    pages[pages.length - 1].push(n);
+  });
+
+  pages.forEach(pageNodes => {
+    const slide = document.createElement('div');
+    slide.className = 'page-slide';
+    pageNodes.forEach(n => slide.appendChild(n));
+    track.appendChild(slide);
+  });
+
+  totalPages = Math.max(1, pages.length);
   currentPage = Math.min(totalPages - 1, Math.max(0, Math.round((fraction || 0) * (totalPages - 1))));
   applyPageTransform();
   updatePageIndicator();
@@ -892,13 +965,15 @@ function layoutPages(fraction){
 
 function applyPageTransform(){
   const vw = getViewportWidth();
-  document.getElementById('pageContent').style.transform = `translateX(${-currentPage * vw}px)`;
+  document.getElementById('pagesTrack').style.transform = `translateX(${-currentPage * vw}px)`;
 }
 
 function jumpToElementPage(el){
-  const vw = getViewportWidth();
-  const targetPage = Math.min(totalPages - 1, Math.max(0, Math.round(el.offsetLeft / vw)));
-  currentPage = targetPage;
+  const slide = el.closest('.page-slide');
+  if(!slide || !slide.parentElement) return;
+  const idx = Array.prototype.indexOf.call(slide.parentElement.children, slide);
+  if(idx < 0) return;
+  currentPage = idx;
   applyPageTransform();
   updatePageIndicator();
   persistProgress();
@@ -1008,8 +1083,7 @@ document.getElementById('mynotesBackBtn').addEventListener('click', () => {
 });
 
 function applyFontSize(){
-  document.getElementById('pageContent').style.fontSize = fontSize + 'px';
-  document.querySelectorAll('.page-content p').forEach(p => p.style.fontSize = fontSize + 'px');
+  document.querySelectorAll('#pageMeasure p, .page-slide p').forEach(p => p.style.fontSize = fontSize + 'px');
   localStorage.setItem(FONT_KEY, fontSize);
 }
 document.getElementById('fontInc').addEventListener('click', () => {
@@ -1102,7 +1176,7 @@ checkContinue();
 renderMyNotes();
 
 // ---------- Highlight mode (select text, tap a color in the fixed bottom bar) ----------
-const chapContentEl = document.getElementById('chapContent');
+const chapContentEl = document.getElementById('pageViewport');
 const hlModeToggle = document.getElementById('hlModeToggle');
 const hlColorBar = document.getElementById('hlColorBar');
 let hlModeOn = false;
