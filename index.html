@@ -230,11 +230,12 @@
 
   /* ---------- Reader screen ---------- */
   .reader-top{
-    position:sticky; top:0; z-index:40;
+    position:relative; z-index:40;
     background:var(--soft);
     padding:14px 18px 10px;
     display:flex; align-items:center; justify-content:space-between;
     border-bottom:1px solid var(--border);
+    flex-shrink:0;
   }
   .back-btn{
     display:flex; align-items:center; gap:6px;
@@ -292,15 +293,53 @@
     border-color:#e8552f;
   }
 
+  #screen-reader.active{
+    display:flex;
+    flex-direction:column;
+    height:100vh;
+    height:100dvh;
+    overflow:hidden;
+  }
+
   .progress-track{
     height:2px; background:var(--border);
-    position:sticky; top:68px; z-index:39;
+    flex-shrink:0;
   }
-  .progress-fill{height:100%; background:var(--gold); width:0%; transition:width .1s linear;}
+  .progress-fill{height:100%; background:var(--gold); width:0%; transition:width .25s ease;}
 
-  .reader-body{
-    padding:8px 30px 120px;
+  .page-viewport{
+    position:relative;
+    flex:1;
+    min-height:0;
+    overflow:hidden;
+    touch-action:pan-y;
   }
+  .page-content{
+    height:100%;
+    column-fill:auto;
+    box-sizing:border-box;
+    transition:transform .32s cubic-bezier(.22,.61,.36,1);
+    will-change:transform;
+  }
+  .page-edge{
+    position:absolute;
+    top:0; bottom:0;
+    width:17%;
+    z-index:10;
+    cursor:pointer;
+  }
+  .page-edge.left{left:0;}
+  .page-edge.right{right:0;}
+
+  .page-indicator{
+    flex-shrink:0;
+    text-align:center;
+    font-size:11px;
+    color:var(--muted);
+    letter-spacing:.15em;
+    padding:9px 0 calc(9px + env(safe-area-inset-bottom, 0px));
+  }
+
   .chap-eyebrow{
     text-align:center;
     font-size:11px;
@@ -325,7 +364,7 @@
     letter-spacing:.1em;
     margin-top:8px;
   }
-  .reader-body p{
+  .page-content p{
     font-family:"Noto Serif TC",serif;
     line-height:2.15;
     letter-spacing:.03em;
@@ -346,19 +385,19 @@
     color:var(--ink-soft);
     font-style:italic;
   }
-  .reader-body p.attribution{
+  .page-content p.attribution{
     font-family:"Noto Sans TC",sans-serif;
     font-size:.85em;
     color:var(--muted);
     text-align:right;
     letter-spacing:.05em;
   }
-  .reader-body mark{
+  .page-content mark{
     background:rgba(169,137,90,.22);
     color:inherit;
     border-radius:2px;
   }
-  .reader-body mark.user-hl{
+  .page-content mark.user-hl{
     cursor:pointer;
     padding:0 1px;
     border-radius:2px;
@@ -396,25 +435,7 @@
     padding:6px 4px;
     flex-shrink:0;
   }
-  .hl-mode-padding{ padding-bottom:70px; }
-
-  .chap-nav{
-    display:flex; justify-content:space-between; align-items:center;
-    padding:30px 30px 60px;
-    gap:14px;
-  }
-  .chap-nav-btn{
-    flex:1;
-    background:var(--card);
-    border:1px solid var(--border);
-    border-radius:14px;
-    padding:14px 16px;
-    cursor:pointer;
-  }
-  .chap-nav-btn.disabled{opacity:.3; pointer-events:none;}
-  .chap-nav-btn .cn-dir{font-size:10px; color:var(--gold); letter-spacing:.2em; margin-bottom:5px;}
-  .chap-nav-btn.next{text-align:right;}
-  .chap-nav-btn .cn-title{font-size:13px; color:var(--ink-soft); line-height:1.5;}
+  .hl-mode-padding{ padding-bottom:0; }
 
   ::selection{background:rgba(169,137,90,.3);}
 
@@ -482,21 +503,16 @@
       </div>
     </div>
     <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
-    <div class="reader-body" id="readerBody">
-      <div class="chap-eyebrow" id="chapEyebrow"></div>
-      <h2 class="chap-title" id="chapTitle"></h2>
-      <div id="chapContent"></div>
-    </div>
-    <div class="chap-nav">
-      <div class="chap-nav-btn prev" id="prevBtn">
-        <div class="cn-dir">◂ 上一章</div>
-        <div class="cn-title" id="prevTitle"></div>
+    <div class="page-viewport" id="pageViewport">
+      <div class="page-content" id="pageContent">
+        <div class="chap-eyebrow" id="chapEyebrow"></div>
+        <h2 class="chap-title" id="chapTitle"></h2>
+        <div id="chapContent"></div>
       </div>
-      <div class="chap-nav-btn next" id="nextBtn">
-        <div class="cn-dir">下一章 ▸</div>
-        <div class="cn-title" id="nextTitle"></div>
-      </div>
+      <div class="page-edge left" id="pageEdgeLeft"></div>
+      <div class="page-edge right" id="pageEdgeRight"></div>
     </div>
+    <div class="page-indicator" id="pageIndicator"></div>
   </div>
 
   <!-- ===== My Notes screen ===== -->
@@ -600,6 +616,9 @@ function renderParaText(pEl, text, key){
 }
 
 let currentSection = 0;
+let currentPage = 0;
+let totalPages = 1;
+const PAGE_MARGIN = 26; // px horizontal margin on each side of a page
 let fontSize = parseInt(localStorage.getItem(FONT_KEY) || '17', 10);
 
 const tocList = document.getElementById('tocList');
@@ -628,7 +647,7 @@ function checkContinue(){
   if(saved && sections[saved.section]){
     card.classList.add('show');
     document.getElementById('continueTitle').textContent = sections[saved.section].title;
-    card.onclick = () => openSection(saved.section, true, saved.scroll);
+    card.onclick = () => openSection(saved.section, true, saved.fraction);
   }
 }
 
@@ -687,8 +706,8 @@ function renderMyNotes(){
       openSection(it.secIdx, true);
       setTimeout(() => {
         const mk = document.querySelector(`mark[data-hl-id="${it.id}"]`);
-        if(mk) mk.scrollIntoView({ behavior:'smooth', block:'center' });
-      }, 80);
+        if(mk) jumpToElementPage(mk);
+      }, 140);
     });
     el.querySelector('.mn-del').addEventListener('click', (e) => {
       e.stopPropagation();
@@ -827,50 +846,143 @@ function openSection(idx, saveIt, scrollFrac){
   }
   applyFontSize();
 
-  // prev/next
-  const prevBtn = document.getElementById('prevBtn');
-  const nextBtn = document.getElementById('nextBtn');
-  if(idx <= 0){ prevBtn.classList.add('disabled'); }
-  else { prevBtn.classList.remove('disabled'); document.getElementById('prevTitle').textContent = sections[idx-1].title; }
-  if(idx >= sections.length - 1){ nextBtn.classList.add('disabled'); }
-  else { nextBtn.classList.remove('disabled'); document.getElementById('nextTitle').textContent = sections[idx+1].title; }
-
   screenToc.classList.remove('active');
   screenMynotes.classList.remove('active');
   screenReader.classList.add('active');
-  window.scrollTo(0,0);
-  const rb = document.getElementById('readerBody');
-  if(scrollFrac){
-    requestAnimationFrame(()=>{ window.scrollTo(0, scrollFrac * (document.body.scrollHeight - window.innerHeight)); });
+
+  const openAtEnd = scrollFrac === 'end';
+  const initialFraction = (typeof scrollFrac === 'number') ? scrollFrac : 0;
+
+  // Wait for web fonts to finish loading before measuring pages — Noto Serif TC
+  // loads asynchronously, and measuring column widths before it swaps in would
+  // give the wrong page count/text metrics once the real font arrives.
+  const doLayout = () => {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        layoutPages(openAtEnd ? 1 : initialFraction);
+        if(saveIt !== false){ persistProgress(); }
+      });
+    });
+  };
+  if(document.fonts && document.fonts.ready){
+    document.fonts.ready.then(doLayout);
+  } else {
+    doLayout();
   }
-  updateProgress();
-  if(saveIt !== false){ persistProgress(); }
+}
+
+function getViewportWidth(){
+  const vp = document.getElementById('pageViewport');
+  return vp ? vp.clientWidth : window.innerWidth;
+}
+
+function layoutPages(fraction){
+  const content = document.getElementById('pageContent');
+  const vw = getViewportWidth();
+  const colWidth = Math.max(100, vw - PAGE_MARGIN * 2);
+  content.style.columnWidth = colWidth + 'px';
+  content.style.columnGap = (PAGE_MARGIN * 2) + 'px';
+  content.style.paddingLeft = PAGE_MARGIN + 'px';
+  content.style.transform = 'translateX(0px)';
+  totalPages = Math.max(1, Math.round(content.scrollWidth / vw));
+  currentPage = Math.min(totalPages - 1, Math.max(0, Math.round((fraction || 0) * (totalPages - 1))));
+  applyPageTransform();
+  updatePageIndicator();
+}
+
+function applyPageTransform(){
+  const vw = getViewportWidth();
+  document.getElementById('pageContent').style.transform = `translateX(${-currentPage * vw}px)`;
+}
+
+function jumpToElementPage(el){
+  const vw = getViewportWidth();
+  const targetPage = Math.min(totalPages - 1, Math.max(0, Math.round(el.offsetLeft / vw)));
+  currentPage = targetPage;
+  applyPageTransform();
+  updatePageIndicator();
+  persistProgress();
+}
+
+function updatePageIndicator(){
+  document.getElementById('pageIndicator').textContent = `${currentPage + 1} / ${totalPages}`;
+  const pct = totalPages > 1 ? (currentPage / (totalPages - 1)) * 100 : 100;
+  document.getElementById('progressFill').style.width = pct + '%';
+}
+
+function turnPage(dir){
+  if(dir > 0){
+    if(currentPage < totalPages - 1){
+      currentPage++;
+      applyPageTransform();
+      updatePageIndicator();
+      persistProgress();
+    } else if(currentSection < sections.length - 1){
+      openSection(currentSection + 1, true, 0);
+    }
+  } else {
+    if(currentPage > 0){
+      currentPage--;
+      applyPageTransform();
+      updatePageIndicator();
+      persistProgress();
+    } else if(currentSection > 0){
+      openSection(currentSection - 1, true, 'end');
+    }
+  }
 }
 
 function persistProgress(){
-  const doc = document.documentElement;
-  const scrollFrac = window.scrollY / Math.max(1,(document.body.scrollHeight - window.innerHeight));
-  localStorage.setItem(STORAGE_KEY, JSON.stringify({ section: currentSection, scroll: scrollFrac }));
+  const fraction = totalPages > 1 ? currentPage / (totalPages - 1) : 0;
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({ section: currentSection, fraction }));
 }
 
-function updateProgress(){
-  const frac = window.scrollY / Math.max(1,(document.body.scrollHeight - window.innerHeight));
-  document.getElementById('progressFill').style.width = Math.min(100, Math.max(0, frac*100)) + '%';
-}
-
-window.addEventListener('scroll', () => {
-  if(screenReader.classList.contains('active')){
-    updateProgress();
-  }
-});
 window.addEventListener('beforeunload', () => {
   if(screenReader.classList.contains('active')) persistProgress();
 });
-let scrollSaveTimer;
-window.addEventListener('scroll', () => {
+
+document.getElementById('pageEdgeLeft').addEventListener('click', () => turnPage(-1));
+document.getElementById('pageEdgeRight').addEventListener('click', () => turnPage(1));
+document.addEventListener('keydown', (e) => {
   if(!screenReader.classList.contains('active')) return;
-  clearTimeout(scrollSaveTimer);
-  scrollSaveTimer = setTimeout(persistProgress, 500);
+  if(e.key === 'ArrowRight') turnPage(1);
+  if(e.key === 'ArrowLeft') turnPage(-1);
+});
+
+// Swipe to turn pages on touch devices. Only fires for quick, mostly-horizontal
+// flicks with no active text selection — a deliberate long-press-and-drag to
+// select text is slower and starts with a pause, so this shouldn't fight with it.
+(function(){
+  const vp = document.getElementById('pageViewport');
+  let touchStartX = 0, touchStartY = 0, touchStartTime = 0;
+  vp.addEventListener('touchstart', (e) => {
+    if(e.touches.length !== 1) return;
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+    touchStartTime = Date.now();
+  }, { passive:true });
+  vp.addEventListener('touchend', (e) => {
+    if(!screenReader.classList.contains('active')) return;
+    const touch = e.changedTouches[0];
+    if(!touch) return;
+    const dt = Date.now() - touchStartTime;
+    const dx = touch.clientX - touchStartX;
+    const dy = touch.clientY - touchStartY;
+    if(Math.abs(dx) > 55 && Math.abs(dx) > Math.abs(dy) * 1.6 && dt < 550){
+      const sel = window.getSelection();
+      if(sel && !sel.isCollapsed) return;
+      turnPage(dx < 0 ? 1 : -1);
+    }
+  }, { passive:true });
+})();
+let resizeTimer;
+window.addEventListener('resize', () => {
+  if(!screenReader.classList.contains('active')) return;
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => {
+    const fraction = totalPages > 1 ? currentPage / (totalPages - 1) : 0;
+    layoutPages(fraction);
+  }, 200);
 });
 
 document.getElementById('backBtn').addEventListener('click', () => {
@@ -895,25 +1007,22 @@ document.getElementById('mynotesBackBtn').addEventListener('click', () => {
   window.scrollTo(0,0);
 });
 
-document.getElementById('prevBtn').addEventListener('click', () => {
-  if(currentSection > 0) openSection(currentSection - 1, true);
-});
-document.getElementById('nextBtn').addEventListener('click', () => {
-  if(currentSection < sections.length - 1) openSection(currentSection + 1, true);
-});
-
 function applyFontSize(){
-  document.getElementById('readerBody').style.fontSize = fontSize + 'px';
-  document.querySelectorAll('.reader-body p').forEach(p => p.style.fontSize = fontSize + 'px');
+  document.getElementById('pageContent').style.fontSize = fontSize + 'px';
+  document.querySelectorAll('.page-content p').forEach(p => p.style.fontSize = fontSize + 'px');
   localStorage.setItem(FONT_KEY, fontSize);
 }
 document.getElementById('fontInc').addEventListener('click', () => {
+  const fraction = totalPages > 1 ? currentPage / (totalPages - 1) : 0;
   fontSize = Math.min(24, fontSize + 1);
   applyFontSize();
+  layoutPages(fraction);
 });
 document.getElementById('fontDec').addEventListener('click', () => {
+  const fraction = totalPages > 1 ? currentPage / (totalPages - 1) : 0;
   fontSize = Math.max(14, fontSize - 1);
   applyFontSize();
+  layoutPages(fraction);
 });
 
 // Theme toggle
@@ -996,7 +1105,6 @@ renderMyNotes();
 const chapContentEl = document.getElementById('chapContent');
 const hlModeToggle = document.getElementById('hlModeToggle');
 const hlColorBar = document.getElementById('hlColorBar');
-const readerBodyEl = document.getElementById('readerBody');
 let hlModeOn = false;
 let hlActiveColor = null;
 
@@ -1004,7 +1112,6 @@ function setHlMode(on){
   hlModeOn = on;
   hlModeToggle.classList.toggle('active-mode', on);
   hlColorBar.classList.toggle('show', on);
-  readerBodyEl.classList.toggle('hl-mode-padding', on);
   if(!on) window.getSelection().removeAllRanges();
 }
 hlModeToggle.addEventListener('click', () => setHlMode(!hlModeOn));
