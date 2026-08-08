@@ -230,12 +230,11 @@
 
   /* ---------- Reader screen ---------- */
   .reader-top{
-    position:relative; z-index:40;
+    position:sticky; top:0; z-index:40;
     background:var(--soft);
     padding:14px 18px 10px;
     display:flex; align-items:center; justify-content:space-between;
     border-bottom:1px solid var(--border);
-    flex-shrink:0;
   }
   .back-btn{
     display:flex; align-items:center; gap:6px;
@@ -293,68 +292,15 @@
     border-color:#e8552f;
   }
 
-  #screen-reader.active{
-    display:flex;
-    flex-direction:column;
-    height:100vh;
-    height:100dvh;
-    overflow:hidden;
-  }
-
   .progress-track{
     height:2px; background:var(--border);
-    flex-shrink:0;
+    position:sticky; top:68px; z-index:39;
   }
-  .progress-fill{height:100%; background:var(--gold); width:0%; transition:width .25s ease;}
+  .progress-fill{height:100%; background:var(--gold); width:0%; transition:width .1s linear;}
 
-  .page-viewport{
-    position:relative;
-    flex:1;
-    min-height:0;
-    overflow:hidden;
-    touch-action:pan-y;
+  .reader-body{
+    padding:8px 30px 120px;
   }
-  .pages-track{
-    display:flex;
-    height:100%;
-    transition:transform .32s cubic-bezier(.22,.61,.36,1);
-    will-change:transform;
-  }
-  .page-slide{
-    flex:0 0 100%;
-    width:100%;
-    height:100%;
-    box-sizing:border-box;
-    padding:0 34px;
-    overflow:hidden;
-  }
-  .page-measure{
-    position:fixed;
-    top:0; left:-9999px;
-    visibility:hidden;
-    pointer-events:none;
-    box-sizing:border-box;
-    padding:0 34px;
-  }
-  .page-edge{
-    position:absolute;
-    top:0; bottom:0;
-    width:17%;
-    z-index:10;
-    cursor:pointer;
-  }
-  .page-edge.left{left:0;}
-  .page-edge.right{right:0;}
-
-  .page-indicator{
-    flex-shrink:0;
-    text-align:center;
-    font-size:11px;
-    color:var(--muted);
-    letter-spacing:.15em;
-    padding:9px 0 calc(9px + env(safe-area-inset-bottom, 0px));
-  }
-
   .chap-eyebrow{
     text-align:center;
     font-size:11px;
@@ -379,7 +325,7 @@
     letter-spacing:.1em;
     margin-top:8px;
   }
-  .page-slide p, .page-measure p{
+  .reader-body p{
     font-family:"Noto Serif TC",serif;
     line-height:2.15;
     letter-spacing:.03em;
@@ -400,19 +346,19 @@
     color:var(--ink-soft);
     font-style:italic;
   }
-  .page-slide p.attribution, .page-measure p.attribution{
+  .reader-body p.attribution{
     font-family:"Noto Sans TC",sans-serif;
     font-size:.85em;
     color:var(--muted);
     text-align:right;
     letter-spacing:.05em;
   }
-  .page-slide mark, .page-measure mark{
+  .reader-body mark{
     background:rgba(169,137,90,.22);
     color:inherit;
     border-radius:2px;
   }
-  .page-slide mark.user-hl, .page-measure mark.user-hl{
+  .reader-body mark.user-hl{
     cursor:pointer;
     padding:0 1px;
     border-radius:2px;
@@ -450,7 +396,25 @@
     padding:6px 4px;
     flex-shrink:0;
   }
-  .hl-mode-padding{ padding-bottom:0; }
+  .hl-mode-padding{ padding-bottom:70px; }
+
+  .chap-nav{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:30px 30px 60px;
+    gap:14px;
+  }
+  .chap-nav-btn{
+    flex:1;
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:14px 16px;
+    cursor:pointer;
+  }
+  .chap-nav-btn.disabled{opacity:.3; pointer-events:none;}
+  .chap-nav-btn .cn-dir{font-size:10px; color:var(--gold); letter-spacing:.2em; margin-bottom:5px;}
+  .chap-nav-btn.next{text-align:right;}
+  .chap-nav-btn .cn-title{font-size:13px; color:var(--ink-soft); line-height:1.5;}
 
   ::selection{background:rgba(169,137,90,.3);}
 
@@ -518,13 +482,21 @@
       </div>
     </div>
     <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
-    <div class="page-viewport" id="pageViewport">
-      <div class="pages-track" id="pagesTrack"></div>
-      <div class="page-edge left" id="pageEdgeLeft"></div>
-      <div class="page-edge right" id="pageEdgeRight"></div>
+    <div class="reader-body" id="readerBody">
+      <div class="chap-eyebrow" id="chapEyebrow"></div>
+      <h2 class="chap-title" id="chapTitle"></h2>
+      <div id="chapContent"></div>
     </div>
-    <div class="page-measure" id="pageMeasure"></div>
-    <div class="page-indicator" id="pageIndicator"></div>
+    <div class="chap-nav">
+      <div class="chap-nav-btn prev" id="prevBtn">
+        <div class="cn-dir">◂ 上一章</div>
+        <div class="cn-title" id="prevTitle"></div>
+      </div>
+      <div class="chap-nav-btn next" id="nextBtn">
+        <div class="cn-dir">下一章 ▸</div>
+        <div class="cn-title" id="nextTitle"></div>
+      </div>
+    </div>
   </div>
 
   <!-- ===== My Notes screen ===== -->
@@ -628,9 +600,6 @@ function renderParaText(pEl, text, key){
 }
 
 let currentSection = 0;
-let currentPage = 0;
-let totalPages = 1;
-const PAGE_MARGIN = 34; // px horizontal margin on each side of a page
 let fontSize = parseInt(localStorage.getItem(FONT_KEY) || '17', 10);
 
 const tocList = document.getElementById('tocList');
@@ -659,7 +628,7 @@ function checkContinue(){
   if(saved && sections[saved.section]){
     card.classList.add('show');
     document.getElementById('continueTitle').textContent = sections[saved.section].title;
-    card.onclick = () => openSection(saved.section, true, saved.fraction);
+    card.onclick = () => openSection(saved.section, true, saved.scroll);
   }
 }
 
@@ -718,8 +687,8 @@ function renderMyNotes(){
       openSection(it.secIdx, true);
       setTimeout(() => {
         const mk = document.querySelector(`mark[data-hl-id="${it.id}"]`);
-        if(mk) jumpToElementPage(mk);
-      }, 140);
+        if(mk) mk.scrollIntoView({ behavior:'smooth', block:'center' });
+      }, 80);
     });
     el.querySelector('.mn-del').addEventListener('click', (e) => {
       e.stopPropagation();
@@ -741,24 +710,13 @@ function splitTitle(title){
 function openSection(idx, saveIt, scrollFrac){
   currentSection = idx;
   const s = sections[idx];
-  const measure = document.getElementById('pageMeasure');
-  measure.innerHTML = '';
-  document.getElementById('pagesTrack').innerHTML = '';
-
-  const eyebrow = document.createElement('div');
-  eyebrow.className = 'chap-eyebrow';
-  eyebrow.textContent = s.isPreface ? '導言' : `第 ${idx} 章　·　全書共 ${chapters.length} 章`;
-  measure.appendChild(eyebrow);
-
+  document.getElementById('chapEyebrow').textContent = s.isPreface ? '導言' : `第 ${idx} 章　·　全書共 ${chapters.length} 章`;
   const t = splitTitle(s.title);
-  const titleEl = document.createElement('h2');
-  titleEl.className = 'chap-title';
-  titleEl.innerHTML = t.sub
+  document.getElementById('chapTitle').innerHTML = t.sub
     ? `${t.main}<span class="chap-title-en">${t.sub}</span>`
     : t.main;
-  measure.appendChild(titleEl);
-
-  const body = measure;
+  const body = document.getElementById('chapContent');
+  body.innerHTML = '';
 
   function isAttribution(p){
     return p.startsWith('---') || p.startsWith('——');
@@ -869,195 +827,55 @@ function openSection(idx, saveIt, scrollFrac){
   }
   applyFontSize();
 
+  // prev/next chapter
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  if(idx <= 0){ prevBtn.classList.add('disabled'); }
+  else { prevBtn.classList.remove('disabled'); document.getElementById('prevTitle').textContent = sections[idx-1].title; }
+  if(idx >= sections.length - 1){ nextBtn.classList.add('disabled'); }
+  else { nextBtn.classList.remove('disabled'); document.getElementById('nextTitle').textContent = sections[idx+1].title; }
+
   screenToc.classList.remove('active');
   screenMynotes.classList.remove('active');
   screenReader.classList.add('active');
-
-  const openAtEnd = scrollFrac === 'end';
-  const initialFraction = (typeof scrollFrac === 'number') ? scrollFrac : 0;
-
-  // Wait for web fonts to finish loading before measuring pages — Noto Serif TC
-  // loads asynchronously, and measuring page heights before it swaps in would
-  // give the wrong page breaks once the real font arrives.
-  const doLayout = () => {
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        layoutPages(openAtEnd ? 1 : initialFraction);
-        if(saveIt !== false){ persistProgress(); }
-      });
-    });
-  };
-  if(document.fonts && document.fonts.ready){
-    document.fonts.ready.then(doLayout);
-  } else {
-    doLayout();
+  window.scrollTo(0,0);
+  if(scrollFrac){
+    requestAnimationFrame(() => { window.scrollTo(0, scrollFrac * (document.body.scrollHeight - window.innerHeight)); });
   }
+  updateProgress();
+  if(saveIt !== false){ persistProgress(); }
 }
 
-function getViewportWidth(){
-  const vp = document.getElementById('pageViewport');
-  return vp ? vp.clientWidth : window.innerWidth;
-}
-function getViewportHeight(){
-  const vp = document.getElementById('pageViewport');
-  return vp ? vp.clientHeight : window.innerHeight;
-}
-
-// Slices the flat list of rendered nodes (eyebrow, title, paragraphs, poem
-// blocks) into per-page containers by measuring real rendered heights —
-// far more reliable across browsers than CSS multi-column, which has known
-// quirks (especially iOS Safari) when combined with flex-computed heights.
-function layoutPages(fraction){
-  const track = document.getElementById('pagesTrack');
-  const measure = document.getElementById('pageMeasure');
-  const vw = getViewportWidth();
-  const vh = getViewportHeight();
-
-  // Gather every content node back into the measuring container, whether
-  // it's already there (first layout after openSection) or currently
-  // scattered across existing page-slide divs (a relayout after a font
-  // size change or resize).
-  if(measure.children.length === 0){
-    Array.from(track.children).forEach(slide => {
-      while(slide.firstChild) measure.appendChild(slide.firstChild);
-    });
-  }
-  track.innerHTML = '';
-
-  measure.style.width = vw + 'px';
-  const nodes = Array.from(measure.children);
-
-  if(nodes.length === 0){
-    totalPages = 1;
-    currentPage = 0;
-    updatePageIndicator();
-    return;
-  }
-
-  void measure.offsetHeight; // force layout before measuring
-  const measureTop = measure.getBoundingClientRect().top;
-  const pages = [[]];
-  let pageStartTop = null;
-  nodes.forEach(n => {
-    const r = n.getBoundingClientRect();
-    const top = r.top - measureTop;
-    const bottom = top + r.height;
-    if(pageStartTop === null) pageStartTop = top;
-    if((bottom - pageStartTop) > vh && pages[pages.length - 1].length > 0){
-      pages.push([]);
-      pageStartTop = top;
-    }
-    pages[pages.length - 1].push(n);
-  });
-
-  pages.forEach(pageNodes => {
-    const slide = document.createElement('div');
-    slide.className = 'page-slide';
-    pageNodes.forEach(n => slide.appendChild(n));
-    track.appendChild(slide);
-  });
-
-  totalPages = Math.max(1, pages.length);
-  currentPage = Math.min(totalPages - 1, Math.max(0, Math.round((fraction || 0) * (totalPages - 1))));
-  applyPageTransform();
-  updatePageIndicator();
-}
-
-function applyPageTransform(){
-  const vw = getViewportWidth();
-  document.getElementById('pagesTrack').style.transform = `translateX(${-currentPage * vw}px)`;
-}
-
-function jumpToElementPage(el){
-  const slide = el.closest('.page-slide');
-  if(!slide || !slide.parentElement) return;
-  const idx = Array.prototype.indexOf.call(slide.parentElement.children, slide);
-  if(idx < 0) return;
-  currentPage = idx;
-  applyPageTransform();
-  updatePageIndicator();
-  persistProgress();
-}
-
-function updatePageIndicator(){
-  document.getElementById('pageIndicator').textContent = `${currentPage + 1} / ${totalPages}`;
-  const pct = totalPages > 1 ? (currentPage / (totalPages - 1)) * 100 : 100;
-  document.getElementById('progressFill').style.width = pct + '%';
-}
-
-function turnPage(dir){
-  if(dir > 0){
-    if(currentPage < totalPages - 1){
-      currentPage++;
-      applyPageTransform();
-      updatePageIndicator();
-      persistProgress();
-    } else if(currentSection < sections.length - 1){
-      openSection(currentSection + 1, true, 0);
-    }
-  } else {
-    if(currentPage > 0){
-      currentPage--;
-      applyPageTransform();
-      updatePageIndicator();
-      persistProgress();
-    } else if(currentSection > 0){
-      openSection(currentSection - 1, true, 'end');
-    }
-  }
+function updateProgress(){
+  const frac = window.scrollY / Math.max(1, (document.body.scrollHeight - window.innerHeight));
+  document.getElementById('progressFill').style.width = Math.min(100, Math.max(0, frac * 100)) + '%';
 }
 
 function persistProgress(){
-  const fraction = totalPages > 1 ? currentPage / (totalPages - 1) : 0;
-  localStorage.setItem(STORAGE_KEY, JSON.stringify({ section: currentSection, fraction }));
+  const scrollFrac = window.scrollY / Math.max(1, (document.body.scrollHeight - window.innerHeight));
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({ section: currentSection, scroll: scrollFrac }));
 }
 
+window.addEventListener('scroll', () => {
+  if(screenReader.classList.contains('active')){
+    updateProgress();
+  }
+});
 window.addEventListener('beforeunload', () => {
   if(screenReader.classList.contains('active')) persistProgress();
 });
-
-document.getElementById('pageEdgeLeft').addEventListener('click', () => turnPage(-1));
-document.getElementById('pageEdgeRight').addEventListener('click', () => turnPage(1));
-document.addEventListener('keydown', (e) => {
+let scrollSaveTimer;
+window.addEventListener('scroll', () => {
   if(!screenReader.classList.contains('active')) return;
-  if(e.key === 'ArrowRight') turnPage(1);
-  if(e.key === 'ArrowLeft') turnPage(-1);
+  clearTimeout(scrollSaveTimer);
+  scrollSaveTimer = setTimeout(persistProgress, 500);
 });
 
-// Swipe to turn pages on touch devices. Only fires for quick, mostly-horizontal
-// flicks with no active text selection — a deliberate long-press-and-drag to
-// select text is slower and starts with a pause, so this shouldn't fight with it.
-(function(){
-  const vp = document.getElementById('pageViewport');
-  let touchStartX = 0, touchStartY = 0, touchStartTime = 0;
-  vp.addEventListener('touchstart', (e) => {
-    if(e.touches.length !== 1) return;
-    touchStartX = e.touches[0].clientX;
-    touchStartY = e.touches[0].clientY;
-    touchStartTime = Date.now();
-  }, { passive:true });
-  vp.addEventListener('touchend', (e) => {
-    if(!screenReader.classList.contains('active')) return;
-    const touch = e.changedTouches[0];
-    if(!touch) return;
-    const dt = Date.now() - touchStartTime;
-    const dx = touch.clientX - touchStartX;
-    const dy = touch.clientY - touchStartY;
-    if(Math.abs(dx) > 55 && Math.abs(dx) > Math.abs(dy) * 1.6 && dt < 550){
-      const sel = window.getSelection();
-      if(sel && !sel.isCollapsed) return;
-      turnPage(dx < 0 ? 1 : -1);
-    }
-  }, { passive:true });
-})();
-let resizeTimer;
-window.addEventListener('resize', () => {
-  if(!screenReader.classList.contains('active')) return;
-  clearTimeout(resizeTimer);
-  resizeTimer = setTimeout(() => {
-    const fraction = totalPages > 1 ? currentPage / (totalPages - 1) : 0;
-    layoutPages(fraction);
-  }, 200);
+document.getElementById('prevBtn').addEventListener('click', () => {
+  if(currentSection > 0) openSection(currentSection - 1, true);
+});
+document.getElementById('nextBtn').addEventListener('click', () => {
+  if(currentSection < sections.length - 1) openSection(currentSection + 1, true);
 });
 
 document.getElementById('backBtn').addEventListener('click', () => {
@@ -1083,20 +901,17 @@ document.getElementById('mynotesBackBtn').addEventListener('click', () => {
 });
 
 function applyFontSize(){
-  document.querySelectorAll('#pageMeasure p, .page-slide p').forEach(p => p.style.fontSize = fontSize + 'px');
+  document.getElementById('chapContent').style.fontSize = fontSize + 'px';
+  document.querySelectorAll('#chapContent p').forEach(p => p.style.fontSize = fontSize + 'px');
   localStorage.setItem(FONT_KEY, fontSize);
 }
 document.getElementById('fontInc').addEventListener('click', () => {
-  const fraction = totalPages > 1 ? currentPage / (totalPages - 1) : 0;
   fontSize = Math.min(24, fontSize + 1);
   applyFontSize();
-  layoutPages(fraction);
 });
 document.getElementById('fontDec').addEventListener('click', () => {
-  const fraction = totalPages > 1 ? currentPage / (totalPages - 1) : 0;
   fontSize = Math.max(14, fontSize - 1);
   applyFontSize();
-  layoutPages(fraction);
 });
 
 // Theme toggle
@@ -1176,9 +991,10 @@ checkContinue();
 renderMyNotes();
 
 // ---------- Highlight mode (select text, tap a color in the fixed bottom bar) ----------
-const chapContentEl = document.getElementById('pageViewport');
+const chapContentEl = document.getElementById('chapContent');
 const hlModeToggle = document.getElementById('hlModeToggle');
 const hlColorBar = document.getElementById('hlColorBar');
+const readerBodyEl = document.getElementById('readerBody');
 let hlModeOn = false;
 let hlActiveColor = null;
 
@@ -1186,6 +1002,7 @@ function setHlMode(on){
   hlModeOn = on;
   hlModeToggle.classList.toggle('active-mode', on);
   hlColorBar.classList.toggle('show', on);
+  readerBodyEl.classList.toggle('hl-mode-padding', on);
   if(!on) window.getSelection().removeAllRanges();
 }
 hlModeToggle.addEventListener('click', () => setHlMode(!hlModeOn));
